@@ -86,7 +86,7 @@ public class ToolMethods {
     }
 
     private static String var1(String[] strings) {
-        return "%s%s&f - %s".formatted(strings[0], strings[1], strings[0]);
+        return "&%s%s&f - &&f%s&f\n".formatted(strings[0], strings[1], strings[0]);
     }
 
     /**
@@ -97,29 +97,29 @@ public class ToolMethods {
     public static String getColorsHelpMessage() {
         StringBuilder builder = new StringBuilder();
         // colors
-        builder.append(var1(new String[] {"&b", "Aqua"}));
-        builder.append(var1(new String[] {"&9", "Blue"}));
-        builder.append(var1(new String[] {"&8", "Dark Gray"}));
-        builder.append(var1(new String[] {"&2", "Dark Green"}));
-        builder.append(var1(new String[] {"&6", "Gold"}));
-        builder.append(var1(new String[] {"&a", "Green"}));
-        builder.append(var1(new String[] {"&c", "Red"}));
-        builder.append(var1(new String[] {"&e", "Yellow"}));
-        builder.append(var1(new String[] {"&0", "Black"}));
-        builder.append(var1(new String[] {"&3", "Dark Aqua"}));
-        builder.append(var1(new String[] {"&1", "Dark Blue"}));
-        builder.append(var1(new String[] {"&5", "Dark Purple"}));
-        builder.append(var1(new String[] {"&4", "Dark Red"}));
-        builder.append(var1(new String[] {"&7", "Gray"}));
-        builder.append(var1(new String[] {"&d", "Light Purple"}));
-        builder.append(var1(new String[] {"&f", "White"}));
+        builder.append(var1(new String[] {"b", "Aqua"}));
+        builder.append(var1(new String[] {"9", "Blue"}));
+        builder.append(var1(new String[] {"8", "Dark Gray"}));
+        builder.append(var1(new String[] {"2", "Dark Green"}));
+        builder.append(var1(new String[] {"6", "Gold"}));
+        builder.append(var1(new String[] {"a", "Green"}));
+        builder.append(var1(new String[] {"c", "Red"}));
+        builder.append(var1(new String[] {"e", "Yellow"}));
+        builder.append(var1(new String[] {"0", "Black"}));
+        builder.append(var1(new String[] {"3", "Dark Aqua"}));
+        builder.append(var1(new String[] {"1", "Dark Blue"}));
+        builder.append(var1(new String[] {"5", "Dark Purple"}));
+        builder.append(var1(new String[] {"4", "Dark Red"}));
+        builder.append(var1(new String[] {"7", "Gray"}));
+        builder.append(var1(new String[] {"d", "Light Purple"}));
+        builder.append(var1(new String[] {"f", "White"}));
 
         // fonts
-        builder.append(var1(new String[] {"&l", "Bold"}));
-        builder.append(var1(new String[] {"&n", "Underline"}));
-        builder.append(var1(new String[] {"&o", "Italic"}));
-        builder.append(var1(new String[] {"&k", "Random"}));
-        builder.append(var1(new String[] {"&m", "strikethrough"}));
+        builder.append(var1(new String[] {"l", "Bold"}));
+        builder.append(var1(new String[] {"n", "Underline"}));
+        builder.append(var1(new String[] {"o", "Italic"}));
+        builder.append(var1(new String[] {"k", "Random"}));
+        builder.append(var1(new String[] {"m", "strikethrough"}));
         return setColor(builder.toString());
     }
 
