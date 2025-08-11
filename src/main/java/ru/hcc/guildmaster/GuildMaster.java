@@ -5,14 +5,11 @@ import ru.hcc.guildmaster.commands.GuildCommand;
 import ru.hcc.guildmaster.tools.Eventer;
 import ru.hcc.guildmaster.tools.Reader;
 import ru.hcc.guildmaster.tools.menus.GuildEditorMenu;
-import ru.hcc.guildmaster.tools.menus.GuildRequestJoinMenu;
 import ru.hcc.guildmaster.tools.menus.GuildRequestsMenu;
 import ru.hcc.guildmaster.tools.menus.GuildTrackingMenu;
-import ru.hcc.guildmaster.tools.menus.patterns.ConfirmMenu;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
-import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
 import java.util.Objects;
 
@@ -31,7 +28,6 @@ public final class GuildMaster extends JavaPlugin {
 
         // menus
         getServer().getPluginManager().registerEvents(new GuildEditorMenu(null), this);
-        getServer().getPluginManager().registerEvents(new GuildRequestJoinMenu(new TimedMessage()), this);
         getServer().getPluginManager().registerEvents(new GuildRequestsMenu(new Search(EventNameKey.EMPTY_KEY, EventStatusKey.NOTHING)), this);
         getServer().getPluginManager().registerEvents(new GuildTrackingMenu(), this);
 

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.UUID;
 
+@Deprecated
 public class GuildRequestJoinMenu extends ToolMethods implements Menu {
 
     private final TimedMessage message;

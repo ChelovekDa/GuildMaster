@@ -115,7 +115,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
             if (sender instanceof Player) {
                 if (sender.hasPermission("guildmaster.guild.create")) {
 
-                    var alreadyCreatedGuilds = new Reader().getGuilds();
+                    var alreadyCreatedGuilds = reader.getGuilds();
 
                     if (alreadyCreatedGuilds == null || !alreadyCreatedGuilds.containsKey(strings[1])) {
 
@@ -132,7 +132,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         }
 
                         Guild guild = new Guild(strings[1], null, ((Player) sender).getUniqueId().toString());
-                        new Reader().writeGuild(guild);
+                        reader.writeGuild(guild);
 
                         String message = setColor("&aГильдия &a&o%s &aуспешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
@@ -183,7 +183,9 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         map.put("uuid", ((Player) sender).getUniqueId().toString());
 
                         StringBuilder builder = new StringBuilder();
-                        for (int i = 0; i < strings.length; i++) if (i > 1) builder.append(strings[i]);
+                        for (int i = 0; i < strings.length; i++) {
+                            if (i > 1) builder.append("%s ".formatted(strings[i]));
+                        }
 
                         TimedMessage timedMessage = new TimedMessage(
                                 EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD,
@@ -194,10 +196,9 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                         new Reader().saveTimedMessage(timedMessage);
 
-                        sender.sendMessage(setColor("&aВы успешно подали заявку на вступление в гильдию &a&o%s&a!".formatted(setColor(guild.displayName))));
-                        sender.sendMessage(setColor("&aОжидайте рассмотрение заявки главой гильдии или администратором. Текущий глава гильдии: &a&o%s&a!".formatted(Bukkit.getPlayer(UUID.fromString(guild.guildMasterUUID)))));
+                        sender.sendMessage(setColor("&aВы успешно подали заявку на вступление в гильдию %s&a!".formatted(setColor(guild.displayName))));
+                        sender.sendMessage(setColor("&aОжидайте рассмотрение заявки главой гильдии или администратором. Текущий глава гильдии: &b&l%s&a!".formatted(Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(guild.guildMasterUUID))).getName())));
                         System.out.println(colorizeMessage("Player %s success to call the request to join in guild '%s'".formatted(sender.getName(), guild.id), Color.GREEN));
-
                     }
                     else sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
                 }

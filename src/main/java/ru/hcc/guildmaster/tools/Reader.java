@@ -93,12 +93,13 @@ public class Reader extends PlayerTrackingLogger {
         HashMap<String, Guild> guildsHashMap = getGuilds();
 
         if (guildsHashMap != null) {
-            for (String guildId : ((HashMap<String, Guild>) guildsHashMap.clone()).keySet()) {
+            for (String guildId : guildsHashMap.keySet()) {
                 if (guildId.equals(guild.id)) {
                     guildsHashMap.remove(guildId);
                     guildsHashMap.put(guildId, guild);
                 }
             }
+            if (!guildsHashMap.containsKey(guild.id)) guildsHashMap.put(guild.id, guild);
         }
         else {
             guildsHashMap = new HashMap<>();

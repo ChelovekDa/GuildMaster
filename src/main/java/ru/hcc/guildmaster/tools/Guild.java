@@ -2,8 +2,6 @@ package ru.hcc.guildmaster.tools;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
@@ -85,22 +83,5 @@ public class Guild {
         map.put("membersUUID", this.membersUUID);
 
         return map;
-    }
-
-    @Deprecated
-    public JSONObject toJson() {
-        JSONObject jsonObject = new JSONObject();
-
-        jsonObject.put("id", this.id);
-        jsonObject.put("displayName", this.displayName);
-        jsonObject.put("maxMembersCount", this.maxMembersCount);
-        jsonObject.put("guildMasterUUID", this.guildMasterUUID);
-
-        JSONArray array = new JSONArray();
-        for (String uuid : this.membersUUID) array.add(uuid);
-
-        jsonObject.put("membersUUID", array);
-
-        return jsonObject;
     }
 }

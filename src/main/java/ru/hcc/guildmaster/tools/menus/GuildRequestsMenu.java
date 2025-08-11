@@ -16,6 +16,8 @@ import ru.hcc.guildmaster.tools.Guild;
 import ru.hcc.guildmaster.tools.Color;
 import ru.hcc.guildmaster.tools.Reader;
 import ru.hcc.guildmaster.tools.ToolMethods;
+import ru.hcc.guildmaster.tools.menus.patterns.ConfirmMenu;
+import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
 import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
@@ -29,18 +31,73 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
     @EventHandler
     public void onPlayerClickMenu(InventoryClickEvent event) {
-        if (event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) {
-            event.setCancelled(true);
+        if (!event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) return;
+        event.setCancelled(true);
 
-            if (event.getCurrentItem() == null) return;
+        ItemStack currentItem = event.getCurrentItem();
 
-            TimedMessage message = fromItemStack(event.getCurrentItem());
-            if (message == null) {
-                event.getWhoClicked().sendMessage(setColor("&cВ процессе выполнения возникла ошибка! Обратитесь к администратору!"));
-                System.out.println(colorizeMessage("In proccess of running the code was appeared an error!", Color.RED_BOLD));
-                Bukkit.getLogger().log(Level.WARNING, "Error: message in GuildRequestJoinMenu.java is the null source! ItemStack string: %s".formatted(Objects.requireNonNull(event.getCurrentItem()).toString()));
-            }
-            else event.getWhoClicked().openInventory(new GuildRequestJoinMenu(message).getMenu());
+        if (currentItem == null) return;
+
+        TimedMessage message = fromItemStack(currentItem);
+        if (message == null) {
+            event.getWhoClicked().sendMessage(setColor("&cВ процессе выполнения возникла ошибка! Обратитесь к администратору!"));
+            System.out.println(colorizeMessage("In proccess of running the code was appeared an error!", Color.RED_BACKGROUND));
+            Bukkit.getLogger().log(Level.WARNING, "Error: message in GuildRequestMenu.java is the null source! ItemStack string: %s".formatted(Objects.requireNonNull(event.getCurrentItem()).toString()));
+        }
+        else {
+            Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
+            Player admin = (Player) event.getWhoClicked();
+            Guild guild = Objects.requireNonNull(new Reader().getGuilds()).get(String.valueOf(message.customValues.get("guild")));
+            ConfirmMenu confirmMenu = new ConfirmMenu() {
+                @Override
+                protected void onConfirm() {
+                    if (admin.hasPermission("guildmaster.guild.accept")) {
+                        if (guild.maxMembersCount <= guild.membersUUID.size()) {
+                            admin.closeInventory();
+                            admin.sendMessage(setColor("&cНевозможно принять игрока в гильдию: нет свободных мест."));
+                            assert player != null;
+                            System.out.println(colorizeMessage("Player %s can't be join to guild '%s' because it's no have empty slots!".formatted(player.getName(), guild.id), Color.RED));
+                            new Reader().saveTimedMessage(message.setStatus(EventStatusKey.READ));
+                        }
+                        else {
+                            guild.addMember(Objects.requireNonNull(player));
+                            admin.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию %s&a!".formatted(player.displayName(), guild.displayName)));
+                            if (player.isOnline()) player.sendMessage(setColor(guild.getSuccessMemberJoinMessage()));
+                        }
+                    }
+                    else {
+                        admin.closeInventory();
+                        admin.sendMessage(getErrorPermissionMessage());
+                    }
+                }
+
+                @Override
+                protected @NotNull String[] getCancelLore() {
+                    assert player != null;
+                    return new String[] {"", "&fВы подтверждаете, что хотите отклонить заявку в гильдию %s&f игрока %s&f?".formatted(guild.displayName, player.getName()), ""};
+                }
+
+                @Override
+                protected @NotNull String[] getConfirmLore() {
+                    assert player != null;
+                    return new String[] {"", "&fВы подтверждаете, что хотите принять заявку в гильдию %s&f игрока %s&f?".formatted(guild.displayName, player.getName()), ""};
+                }
+
+                @Override
+                protected void onCancel() {
+                    if (admin.hasPermission("guildmaster.guild.deny")) {
+                        assert player != null;
+                        admin.sendMessage(setColor("&aВы отказали игроку %s в принятии в гильдию %s&a.".formatted(player.getName(), guild.displayName)));
+                        if (Objects.requireNonNull(player).isOnline()) player.sendMessage(setColor(guild.getCancelMemberJoinMessage()));
+                        new Reader().saveTimedMessage(message.setStatus(EventStatusKey.READ));
+                    }
+                    else {
+                        admin.closeInventory();
+                        admin.sendMessage(getErrorPermissionMessage());
+                    }
+                }
+            };
+            event.getWhoClicked().openInventory(confirmMenu.getMenu());
         }
     }
 
