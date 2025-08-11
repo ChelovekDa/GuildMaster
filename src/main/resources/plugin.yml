@@ -1,0 +1,62 @@
+name: GuildMaster
+version: '0.1-beta'
+main: ru.hcc.guildmaster.GuildMaster
+api-version: '1.21'
+prefix: GuildMaster
+author: English (aka Horoshiy)
+description: Plugin for guilds on MMP
+website:
+  'Discord: english_horoshiy'
+commands:
+  guild: {}
+permissions:
+
+  guildmaster.*:
+    description: Gives all permissions
+    default: op
+    children:
+      guildmaster.guild.create: false
+      guildmaster.guild.menu: false
+      guildmaster.guild.join: false
+      guildmaster.guild.leave: false
+      guildmaster.guild.accept: false
+      guildmaster.guild.deny: false
+      guildmaster.guild.kick: false
+      guildmaster.guild.track: false
+      guildmaster.guild.edit: false
+
+  guildmaster.guild.create:
+    description: Allow to create guild
+    default: op
+
+  guildmaster.guild.menu:
+    description: Allow to use menu
+    default: op
+
+  guildmaster.guild.join:
+    description: Allow to call the request to join the guild
+    default: true
+
+  guildmaster.guild.leave:
+    description: Allow to leave from the guild
+    default: true
+
+  guildmaster.guild.accept:
+    description: Allow to join the guild
+    default: op
+
+  guildmaster.guild.deny:
+    description: Allow to deny the call to request to join the guild
+    default: op
+
+  guildmaster.guild.kick:
+    description: Allow to kick a player from the guild
+    default: op
+
+  guildmaster.guild.track:
+    description: Allow to surveillance for the guild-member
+    default: op
+
+  guildmaster.guild.edit:
+    description: Allow to edit the guild
+    default: op
