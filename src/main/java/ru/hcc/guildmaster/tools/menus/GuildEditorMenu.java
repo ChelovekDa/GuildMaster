@@ -32,7 +32,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
     private final Reader reader = new Reader();
 
-    private final Guild guild;
+    private Guild guild;
 
     public GuildEditorMenu(Guild guild) {
         this.guild = guild;
@@ -67,7 +67,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         }
 
         guild.maxMembersCount = newCount;
-        reader.writeGuilds(new Guild[] {guild});
+        reader.writeGuild(guild);
         player.sendMessage(setColor("&aМаксимальное количество игроков изменено на %s".formatted(String.valueOf(newCount))));
 
     }
@@ -151,7 +151,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
                                 @Override
                                 protected void onConfirm() {
                                     guild.guildMasterUUID = pl.getUniqueId().toString();
-                                    reader.writeGuilds(new Guild[] {guild});
+                                    reader.writeGuild(guild);
 
                                     TimedMessage timedMessage = messages.getFirst();
                                     timedMessage.setStatus(EventStatusKey.WAITING);
@@ -190,10 +190,39 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
     @EventHandler
     public void onPlayerClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) return;
         event.setCancelled(true);
         Player player = (Player) event.getWhoClicked();
         ItemStack stack = event.getCurrentItem();
         if (stack == null) return;
+
+        ItemStack idItem = Objects.requireNonNull(event.getClickedInventory()).getItem(45);
+        if (idItem == null) {
+            player.closeInventory();
+            player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
+            System.out.println(colorizeMessage("Can't get guild id.", Color.RED));
+            return;
+        }
+
+        String id = idItem.getItemMeta().getDisplayName().split(" ")[1];
+        if (!Objects.requireNonNull(reader.getGuildNames()).contains(id)) {
+            player.closeInventory();
+            player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
+            System.out.println(colorizeMessage("Can't get guild id.", Color.RED));
+            return;
+        }
+
+        var guilds = reader.getGuilds();
+        assert guilds != null;
+        for (String guildId : guilds.keySet()) {
+            if (guildId.equals(id)) this.guild = guilds.get(guildId);
+        }
+        if (this.guild == null) {
+            player.closeInventory();
+            player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
+            System.out.println(colorizeMessage("Can't get guild because source is null.", Color.RED));
+            return;
+        }
 
         if (stack.equals(getColorDescriptionItem())) {
             player.sendMessage(getColorsHelpMessage());
@@ -233,13 +262,14 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             HashMap<String, Object> map = new HashMap<>();
             map.put("guild", guild.id);
             map.put("uuid", player.getUniqueId().toString());
-            TimedMessage message = new TimedMessage(EventNameKey.GUILD_DELETE, EventStatusKey.NOTHING, "Guild delete", map);
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_DELETE, EventStatusKey.NOTHING, "Guild deleting", map);
 
             reader.saveTimedMessage(message);
 
             ConfirmMenu menu = new ConfirmMenu() {
                 @Override
                 protected void onConfirm() {
+                    message.message = "Guild deleted";
                     reader.saveTimedMessage(message.setStatus(EventStatusKey.WAITING));
                     reader.deleteGuild(guild);
                     player.sendMessage(setColor("&aГильдия %s успешно удалена!".formatted(guild.displayName)));
@@ -264,7 +294,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
     }
 
-    private static final byte[] cords = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53};
+    private static final byte[] cords = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 46, 47, 48, 49, 50, 51, 52, 53};
 
     @NotNull
     private ItemStack getMenuDecorationGlass() {
@@ -272,6 +302,17 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName("");
+
+        itemStack.setItemMeta(meta);
+        return itemStack;
+    }
+
+    @NotNull
+    private ItemStack getMenuGuildIDItem() {
+        ItemStack itemStack = new ItemStack(Material.WHITE_STAINED_GLASS_PANE);
+        ItemMeta meta = itemStack.getItemMeta();
+
+        meta.setDisplayName(setColor("&f&lID: %s".formatted(guild.id)));
 
         itemStack.setItemMeta(meta);
         return itemStack;
@@ -311,7 +352,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName(setColor("&d&lИзменить название"));
-        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить &f&oвизуальное&f название гильдии, с использованием цветовых кодов.\n&8Примечание: справку по использованию цветовых кодов вы можете найти справа внизу.", ""})));
+        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить &f&oвизуальное&f название гильдии, с использованием цветовых кодов.", "&fТекущее визуальное название: %s".formatted(guild.displayName), "&8Примечание: справку по использованию цветовых кодов вы можете найти справа внизу.", ""})));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.POWER, 2, false);
 
@@ -339,7 +380,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName(setColor("&6&lУстановить количество учасников"));
-        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить максимально возможное количество участников в гильдии,\n&cв диапазоне &c&oот 1 до 127&c человек.&f ", ""})));
+        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить максимально возможное количество участников в гильдии ", "&cв диапазоне от 1 до 127 человек.", "&fТекущее максимальное количество участников: &b%s".formatted(String.valueOf(guild.maxMembersCount)), ""})));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.KNOCKBACK, 2, false);
 
@@ -382,6 +423,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         inventory.setItem(24, getSetDisplayNameItem());
 
         inventory.setItem(43, getColorDescriptionItem());
+        inventory.setItem(45, getMenuGuildIDItem());
 
         return inventory;
     }

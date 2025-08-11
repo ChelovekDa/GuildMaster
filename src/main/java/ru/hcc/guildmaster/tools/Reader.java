@@ -47,22 +47,12 @@ public class Reader extends PlayerTrackingLogger {
     }
 
     /**
-     * This method needs to write all changed guild's objects
-     * @param guilds changed guild's objects
-     * @see #writeGuild(Guild)
-     * @see #getGuilds()
-     */
-    public void writeGuilds(@NotNull Guild[] guilds) {
-        for (Guild value : guilds) writeGuild(value);
-    }
-
-    /**
      * This method needs to get all guild names.
      */
-    @Nullable
+    @NotNull
     public ArrayList<String> getGuildNames() {
         var guilds = getGuilds();
-        if (guilds == null) return null;
+        if (guilds == null) return new ArrayList<>();
 
         ArrayList<String> result = new ArrayList<>();
         for (String guildID : guilds.keySet()) result.add(guilds.get(guildID).id);
@@ -83,7 +73,9 @@ public class Reader extends PlayerTrackingLogger {
         else return;
 
         try {
-            for (Guild g : guildsHashMap.values()) Files.write(Paths.get(path), g.toJson().toJSONString().getBytes());
+            Map<String, Map<String, Object>> map = new HashMap<>();
+            for (String guildID : guildsHashMap.keySet()) map.put(guildID, guildsHashMap.get(guildID).toMap());
+            Files.write(Paths.get(path), new JSONObject(map).toJSONString().getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -93,9 +85,9 @@ public class Reader extends PlayerTrackingLogger {
      * This method needs to write changed guild's object
      * @param guild changed guild object
      * @see #getGuilds()
-     * @see #writeGuilds(Guild[])
+     * @see #deleteGuild(Guild)
      */
-    private void writeGuild(@NotNull Guild guild) {
+    public void writeGuild(@NotNull Guild guild) {
         String path = "%s/%s".formatted(getPath(), GUILDS_FILE_NAME);
 
         HashMap<String, Guild> guildsHashMap = getGuilds();
@@ -114,7 +106,9 @@ public class Reader extends PlayerTrackingLogger {
         }
 
         try {
-            for (Guild g : guildsHashMap.values()) Files.write(Paths.get(path), g.toJson().toJSONString().getBytes());
+            Map<String, Map<String, Object>> map = new HashMap<>();
+            for (String guildID : guildsHashMap.keySet()) map.put(guildID, guildsHashMap.get(guildID).toMap());
+            Files.write(Paths.get(path), new JSONObject(map).toJSONString().getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -123,7 +117,6 @@ public class Reader extends PlayerTrackingLogger {
     /**
      * This method needs to get all guilds from file
      * @return HashMap with all guilds, where key - guild id
-     * @see #writeGuilds(Guild[])
      * @see #writeGuild(Guild)
      * @see #GUILDS_FILE_NAME
      */

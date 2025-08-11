@@ -32,7 +32,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
     private boolean var1(boolean isConsole, @NotNull String @NotNull [] strings, @NotNull CommandSender sender) {
         if (strings.length == 3) {
             var guildNames = new Reader().getGuildNames();
-            if (guildNames != null) {
+            if (!guildNames.isEmpty()) {
                 if (guildNames.contains(strings[1])) {
 
                     HashMap<String, Object> additionalValues = new HashMap<>();
@@ -132,7 +132,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         }
 
                         Guild guild = new Guild(strings[1], null, ((Player) sender).getUniqueId().toString());
-                        new Reader().writeGuilds(new Guild[] {guild});
+                        new Reader().writeGuild(guild);
 
                         String message = setColor("&aГильдия &a&o%s &aуспешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
@@ -225,7 +225,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                     HashMap<String, Object> additionalValues = new HashMap<>();
 
                                     var guildNames = new Reader().getGuildNames();
-                                    assert guildNames != null;
 
                                     for (int i = 0; i < strings.length; i++) {
                                         if (i == 0) continue;
@@ -374,7 +373,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                         }
                                     }
 
-                                    new Reader().writeGuilds(new Guild[] {guild});
+                                    new Reader().writeGuild(guild);
                                     return true;
 
                                 }
@@ -415,7 +414,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                                 reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, "Player was kicked from the guild.", additionalValues));
 
                                                 guild.membersUUID.remove(uuid);
-                                                reader.writeGuilds(new Guild[] {guild});
+                                                reader.writeGuild(guild);
 
                                                 if (player.isOnline()) {
                                                     player.sendMessage(setColor("&cВы были исключены из гильдии!"));
@@ -550,6 +549,8 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
         if (args.length == 0 || args.length == 1) {
             for (String com : COMMAND_VALUES) if (com.startsWith(args[0])) completions.add(com);
         }
+        else for (Player player : Bukkit.getOnlinePlayers())
+            if (player.getName().startsWith(args[0])) completions.add(player.getName());
         return completions;
     }
 }

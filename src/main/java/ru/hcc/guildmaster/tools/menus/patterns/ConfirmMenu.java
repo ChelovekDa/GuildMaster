@@ -9,7 +9,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import ru.hcc.guildmaster.GuildMaster;
 import ru.hcc.guildmaster.tools.ToolMethods;
 import ru.hcc.guildmaster.tools.menus.Menu;
 
@@ -21,20 +23,24 @@ import java.util.List;
  */
 public abstract class ConfirmMenu extends ToolMethods implements Menu {
 
+    public ConfirmMenu() {
+        register();
+    }
+
     @EventHandler
     public void onPlayerClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) return;
         event.setCancelled(true);
-        if (event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) {
-            ItemStack itemStack = event.getCurrentItem();
-            if (itemStack == null) return;
+        ItemStack itemStack = event.getCurrentItem();
+        if (itemStack == null) return;
 
-            if (itemStack.equals(getConfirmButton())) {
-                onConfirm();
-            }
-            else if (itemStack.equals(getCancelButton())) {
-                onCancel();
-            }
+        if (itemStack.equals(getConfirmButton())) {
+            onConfirm();
         }
+        else if (itemStack.equals(getCancelButton())) {
+            onCancel();
+        }
+        unregister();
     }
 
     @NotNull
@@ -87,6 +93,16 @@ public abstract class ConfirmMenu extends ToolMethods implements Menu {
     @NotNull
     protected String[] getConfirmLore() {
         return new String[] {"", "&fПодтвердить действие", ""};
+    }
+
+    private void register() {
+        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    private void unregister() {
+        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
+        InventoryClickEvent.getHandlerList().unregister(this);
     }
 
     protected abstract void onConfirm();

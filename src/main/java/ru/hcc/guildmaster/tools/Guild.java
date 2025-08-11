@@ -10,6 +10,7 @@ import ru.hcc.guildmaster.tools.timed.Search;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class Guild {
@@ -70,9 +71,23 @@ public class Guild {
 
     public void addMember(Player player) {
         this.membersUUID.add(player.getUniqueId().toString());
-        new Reader().writeGuilds(new Guild[] {this});
+        new Reader().writeGuild(this);
     }
 
+    @NotNull
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("id", this.id);
+        map.put("displayName", this.displayName);
+        map.put("maxMembersCount", this.maxMembersCount);
+        map.put("guildMasterUUID", this.guildMasterUUID);
+        map.put("membersUUID", this.membersUUID);
+
+        return map;
+    }
+
+    @Deprecated
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
 

@@ -23,7 +23,7 @@ public class ToolMethods {
     }
 
     public static String getHelpMessage() {
-        return "&a&lGuildMaster&a plugin for Minecraft version &a&l1.21.8&a\n&6Created by &6&lHCC&6 (Home Creator Companiy)\n&aActually version of plugin: &a&l%s&f".formatted(GuildMaster.VERSION);
+        return "&a&lGuildMaster&a plugin for Minecraft version &a&l1.21.8&a\n&6Created by &6&lHCC&6 (Home Creator Companiy)\n&aActually version of plugin: &a&l%s&f".formatted(GuildMaster.getPlugin(GuildMaster.class).getDescription().getVersion());
     }
 
     /**

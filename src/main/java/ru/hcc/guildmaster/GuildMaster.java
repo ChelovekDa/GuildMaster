@@ -19,7 +19,6 @@ import java.util.Objects;
 public final class GuildMaster extends JavaPlugin {
 
     public static final String NAME = "GuildMaster";
-    public static final String VERSION = "0.1.2-beta";
 
     @Override
     public void onEnable() {
@@ -34,13 +33,6 @@ public final class GuildMaster extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuildEditorMenu(null), this);
         getServer().getPluginManager().registerEvents(new GuildRequestJoinMenu(new TimedMessage()), this);
         getServer().getPluginManager().registerEvents(new GuildRequestsMenu(new Search(EventNameKey.EMPTY_KEY, EventStatusKey.NOTHING)), this);
-        getServer().getPluginManager().registerEvents(new ConfirmMenu() {
-            @Override
-            protected void onConfirm() {}
-
-            @Override
-            protected void onCancel() {}
-        }, this);
         getServer().getPluginManager().registerEvents(new GuildTrackingMenu(), this);
 
         // other backend
