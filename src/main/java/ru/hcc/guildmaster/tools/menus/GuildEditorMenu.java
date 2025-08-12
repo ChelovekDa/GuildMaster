@@ -12,7 +12,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import ru.hcc.guildmaster.GuildMaster;
 import ru.hcc.guildmaster.tools.Color;
@@ -60,7 +59,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             return;
         }
 
-        if (guild.membersUUID.size() > newCount || newCount < 0) {
+        if (guild.membersUUID.size() > newCount) {
             player.sendMessage(setColor("&cНевозможно установить такое количество участников, поскольку в гильдии состоит больше людей, чем вы хотите!"));
             System.out.println(colorizeMessage("Can't setting new count of members in guild '%s' because now count of members more than need to set.".formatted(guild.id), Color.RED));
             return;
@@ -134,8 +133,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
         HashMap<String, Object> map = new HashMap<>();
         map.put("uuid", player.getUniqueId().toString());
-        Search search = new Search(EventNameKey.GUILD_CHANGE_MASTER, EventStatusKey.NOTHING, map);
-        var messages = search.search();
+        ArrayList<TimedMessage> messages = new Search(EventNameKey.GUILD_CHANGE_MASTER, EventStatusKey.NOTHING, map).search();
         if (messages.isEmpty()) return;
         else event.setCancelled(true);
 
@@ -172,14 +170,14 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
                                     player.sendMessage(setColor("&aИгрок %s установлен в качестве главы гильдии!".formatted(pl.getName())));
                                     player.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
-                                    pl.sendMessage(setColor("&aПоздравляем! Вы были повышены до главы гильдии %s! Будьте справедливы.".formatted(guild.displayName)));
-                                    broadcastMessage("&fИгрок &f%s стал главой гильдии %s&f!".formatted(pl.getName(), guild.displayName), -1, null);
+                                    pl.sendMessage(setColor("&aПоздравляем! Вы были повышены до главы гильдии %s!&a Будьте справедливы.".formatted(guild.displayName)));
+                                    broadcastMessage("&6Игрок %s&6 стал главой гильдии %s&6!".formatted(pl.getName(), guild.displayName), -1, null);
                                     player.closeInventory();
                                 }
 
                                 @Override
                                 protected @NotNull String[] getConfirmLore() {
-                                    return new String[] {"", "&fВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока '%s'?".formatted(pl.getName()), ""};
+                                    return new String[] {"", "&aВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока %s?".formatted(pl.getName()), ""};
                                 }
 
                                 @Override
@@ -385,7 +383,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName(setColor("&d&lИзменить название"));
-        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить &f&oвизуальное&f название гильдии, с использованием цветовых кодов.", "&fТекущее визуальное название: %s".formatted(guild.displayName), "&8Примечание: справку по использованию цветовых кодов вы можете найти справа внизу.", ""})));
+        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить&f&o визуальное&f название гильдии, с использованием цветовых кодов.", "&fТекущее визуальное название: %s".formatted(guild.displayName), "&8Примечание: справку по использованию цветовых кодов вы можете найти справа внизу.", ""})));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.POWER, 2, false);
 

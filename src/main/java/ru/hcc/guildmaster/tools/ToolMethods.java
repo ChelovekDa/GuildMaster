@@ -97,6 +97,7 @@ public class ToolMethods {
     public static String getColorsHelpMessage() {
         StringBuilder builder = new StringBuilder();
         // colors
+        builder.append("\n");
         builder.append(var1(new String[] {"b", "Aqua"}));
         builder.append(var1(new String[] {"9", "Blue"}));
         builder.append(var1(new String[] {"8", "Dark Gray"}));
@@ -115,6 +116,7 @@ public class ToolMethods {
         builder.append(var1(new String[] {"f", "White"}));
 
         // fonts
+        builder.append("\n");
         builder.append(var1(new String[] {"l", "Bold"}));
         builder.append(var1(new String[] {"n", "Underline"}));
         builder.append(var1(new String[] {"o", "Italic"}));

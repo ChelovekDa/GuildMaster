@@ -43,28 +43,24 @@ public class Search {
         ArrayList<TimedMessage> allMessages = new Reader().getTimedMessages();
 
         if (this.eventNameKey == null && this.eventStatusKey == null) {
-            for (TimedMessage message : (ArrayList<TimedMessage>) allMessages.clone()) {
+            for (TimedMessage message : allMessages) {
                 if (message.eventStatusKey.equals(EventStatusKey.WAITING)) result.add(message);
             }
         }
-        else {
-            if (!allMessages.isEmpty()) {
-                for (TimedMessage mes : allMessages) {
-                    if (Objects.equals(eventNameKey, mes.eventNameKey) && Objects.equals(eventStatusKey, mes.eventStatusKey)) {
-                        if (mes.customValues.size() < this.additionalValues.size()) continue;
-
-                        for (String key : this.additionalValues.keySet()) {
-                            if (mes.customValues.containsKey(key) && !Objects.equals(mes.customValues.get(key), additionalValues.get(key)))
-                                break;
+        else if (!allMessages.isEmpty()) {
+            for (TimedMessage mes : allMessages) {
+                if (Objects.equals(this.eventNameKey, mes.eventNameKey) && Objects.equals(this.eventStatusKey, mes.eventStatusKey)) {
+                    byte res = 1;
+                    for (String key : this.additionalValues.keySet()) {
+                        if (mes.customValues.containsKey(key) && !Objects.equals(mes.customValues.get(key), additionalValues.get(key))) {
+                            res--;
+                            break;
                         }
-
-                        result.add(mes);
-
                     }
+                    if (res != 0) result.add(mes);
                 }
             }
         }
-
         return result;
     }
 

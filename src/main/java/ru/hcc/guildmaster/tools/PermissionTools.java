@@ -15,8 +15,7 @@ public class PermissionTools extends ToolMethods {
             "guildmaster.guild.deny",
             "guildmaster.guild.kick",
             "guildmaster.guild.track",
-            "guildmaster.guild.edit.*",
-            "guildmaster.guild.leave",
+            "guildmaster.guild.edit",
             "guildmaster.guild.menu"
     };
 

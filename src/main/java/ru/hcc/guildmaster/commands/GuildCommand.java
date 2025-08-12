@@ -132,7 +132,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Guild guild = new Guild(strings[1], null, ((Player) sender).getUniqueId().toString());
                         reader.writeGuild(guild);
 
-                        String message = setColor("&aГильдия &a&o%s &a успешно создана!".formatted(guild.id));
+                        String message = setColor("&aГильдия &a&o%s &aуспешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
                         System.out.println(colorizeMessage("Success creating new guild '%s'.".formatted(guild.id), Color.GREEN));
 
@@ -153,7 +153,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                     }
                     else {
-                        String message = setColor("&cГильдия с названием %s &c уже существует!".formatted(alreadyCreatedGuilds.get(strings[1]).id));
+                        String message = setColor("&cГильдия с названием %s&c уже существует!".formatted(alreadyCreatedGuilds.get(strings[1]).id));
                         sender.sendMessage(message);
                     }
 
