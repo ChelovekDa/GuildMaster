@@ -8,7 +8,10 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
+import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 public class Eventer extends ToolMethods implements Listener {
@@ -20,7 +23,7 @@ public class Eventer extends ToolMethods implements Listener {
         if (player.isOp() || player.hasPermission("guildmaster.*")) {
             var timedMessages = new Search(null, null).search();
             if (!timedMessages.isEmpty())
-                player.sendMessage(setColor("&6Есть непрочитанные заявки в гильдии (&6%s&6).".formatted(String.valueOf(timedMessages.size()))));
+                player.sendMessage(setColor("&6Есть непрочитанные уведомления (&6%s&6).".formatted(String.valueOf(timedMessages.size()))));
         }
         else {
             var guilds = new Reader().getGuilds();
@@ -28,7 +31,9 @@ public class Eventer extends ToolMethods implements Listener {
                 for (String id : guilds.keySet()) {
                     Guild guild = guilds.get(id);
                     if (guild.guildMasterUUID.equals(event.getPlayer().getUniqueId().toString())) {
-                        var timedMessages = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING).search();
+                        HashMap<String, Object> additionalValues = new HashMap<>();
+                        additionalValues.put("guild", guild.id);
+                        ArrayList<TimedMessage> timedMessages = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues).search();
                         if (!timedMessages.isEmpty())
                             player.sendMessage(setColor("&6Есть непрочитанные заявки в гильдию (&6%s&6).".formatted(String.valueOf(timedMessages.size()))));
                     }

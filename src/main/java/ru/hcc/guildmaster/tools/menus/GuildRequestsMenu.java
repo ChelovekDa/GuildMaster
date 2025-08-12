@@ -59,6 +59,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                         }
                         else {
                             guild.addMember(Objects.requireNonNull(player));
+                            admin.closeInventory();
                             admin.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию %s&a!".formatted(player.getName(), guild.displayName)));
                             if (player.isOnline()) player.sendMessage(setColor(guild.getSuccessMemberJoinMessage()));
                         }

@@ -207,6 +207,16 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         sender.sendMessage(setColor("&aВы успешно подали заявку на вступление в гильдию %s&a!".formatted(setColor(guild.displayName))));
                         sender.sendMessage(setColor("&aОжидайте рассмотрение заявки главой гильдии или администратором. Текущий глава гильдии: &b&l%s&a!".formatted(Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(guild.guildMasterUUID))).getName())));
                         System.out.println(colorizeMessage("Player %s success to call the request to join in guild '%s'".formatted(sender.getName(), guild.id), Color.GREEN));
+
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (player.getUniqueId().toString().equals(guild.guildMasterUUID)) {
+                                player.sendMessage(setColor("&aПоявилась новая заявка!"));
+                            }
+                            else if (player.isOp() || player.hasPermission("guildmaster.*")) {
+                                player.sendMessage(setColor("&aПоявилась новая заявка в гильдии %s&a (ID: %s)".formatted(guild.displayName, guild.id)));
+                            }
+                        }
+
                     }
                     else sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
                 }
@@ -566,13 +576,22 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
+
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
             for (String com : COMMAND_VALUES) if (com.startsWith(args[0])) completions.add(com);
         }
-        else for (Player player : Bukkit.getOnlinePlayers())
-            if (player.getName().startsWith(args[0])) completions.add(player.getName());
+        else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit"))) {
+            for (String com : reader.getGuildNames()) if (com.startsWith(args[0])) completions.add(com);
+        }
+//        else if (args.length == 2 && (args[0].equals("accept") || args[0].equals("deny"))) {
+//
+//        }
+        else {
+            for (Player player : Bukkit.getOnlinePlayers())
+                if (player.getName().startsWith(args[0])) completions.add(player.getName());
+        }
         return completions;
     }
 }
