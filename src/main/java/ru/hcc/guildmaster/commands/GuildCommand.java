@@ -375,7 +375,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                     HashMap<String, Object> additionalValues = new HashMap<>();
                                     additionalValues.put("guild", guild.id);
                                     additionalValues.put("uuid", uuid);
-                                    new Reader().saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_LEAVE_GUILD, EventStatusKey.READ, "Player leave the guild", additionalValues));
 
                                     guild.membersUUID.remove(i);
                                     sender.sendMessage(setColor("&aВы успешно покинули гильдию!"));
@@ -385,14 +384,12 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                             guild.guildMasterUUID = Objects.requireNonNull(offlinePlayer.getPlayer()).getUniqueId().toString();
                                             new Reader().saveTimedMessage(new TimedMessage(EventNameKey.GUILD_MASTER_LEAVE_GUILD, EventStatusKey.WAITING, "Guild master %s leave yourself guild '%s'".formatted(((Player) sender).getDisplayName(), guild.id), additionalValues));
                                             removeGuildMasterPerms(((Player) sender).getPlayer());
-                                            broadcastMessage("На пост временно исполняющего обязанности главы гильдии '%s' назначен администратор %s, поскольку бывший глава покинул гильдию.".formatted(guild.displayName, offlinePlayer.getPlayer().getDisplayName()), -1, null);
+                                            broadcastMessage("&6На пост временно исполняющего обязанности главы гильдии %s&6 назначен администратор &6&l%s&6, поскольку бывший глава покинул гильдию.".formatted(guild.displayName, offlinePlayer.getPlayer().getDisplayName()), -1, null);
                                             break;
                                         }
                                     }
-
                                     new Reader().writeGuild(guild);
                                     return true;
-
                                 }
                             }
                         }
@@ -533,7 +530,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                 return true;
                             }
                         }
-                        sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
+                        sender.sendMessage(setColor("&cТакой гильдии не существует!"));
                         return false;
                     }
                     else {
@@ -561,11 +558,9 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         if (sender.hasPermission("guildmaster.*") || sender.isOp()) {
                             sender.sendMessage(setColor("&6Использование: /guild edit [Название гильдии]"));
                         }
-                        else sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
+                        else sender.sendMessage(setColor("&cВы не имеете право изменять эту гильдию, поскольку не являетесь её главой!"));
                         return false;
-
                     }
-
                 }
                 else sender.sendMessage(getErrorPermissionMessage());
             }
@@ -580,18 +575,12 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            for (String com : COMMAND_VALUES) if (com.startsWith(args[0])) completions.add(com);
+            completions.addAll(Arrays.asList(COMMAND_VALUES));
         }
         else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit"))) {
-            for (String com : reader.getGuildNames()) if (com.startsWith(args[0])) completions.add(com);
+            completions.addAll(reader.getGuildNames());
         }
-//        else if (args.length == 2 && (args[0].equals("accept") || args[0].equals("deny"))) {
-//
-//        }
-        else {
-            for (Player player : Bukkit.getOnlinePlayers())
-                if (player.getName().startsWith(args[0])) completions.add(player.getName());
-        }
+        else for (Player player : Bukkit.getOnlinePlayers()) completions.add(player.getName());
         return completions;
     }
 }

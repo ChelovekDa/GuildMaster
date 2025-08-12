@@ -86,9 +86,10 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                 protected void onCancel() {
                     if (admin.hasPermission("guildmaster.guild.deny")) {
                         assert player != null;
-                        admin.sendMessage(setColor("&aВы отказали игроку %s в принятии в гильдию %s&a.".formatted(player.getName(), guild.displayName)));
                         if (Objects.requireNonNull(player).isOnline()) player.sendMessage(setColor(guild.getCancelMemberJoinMessage()));
                         new Reader().saveTimedMessage(message.setStatus(EventStatusKey.READ));
+                        admin.sendMessage(setColor("&aВы отказали игроку %s в принятии в гильдию %s&a.".formatted(player.getName(), guild.displayName)));
+                        admin.closeInventory();
                     }
                     else {
                         admin.closeInventory();

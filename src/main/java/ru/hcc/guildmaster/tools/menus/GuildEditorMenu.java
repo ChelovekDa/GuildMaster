@@ -306,7 +306,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
                     message.message = "Guild deleted";
                     reader.saveTimedMessage(message.setStatus(EventStatusKey.WAITING));
                     reader.deleteGuild(guild);
-                    player.sendMessage(setColor("&aГильдия %s успешно удалена!".formatted(guild.displayName)));
+                    player.sendMessage(setColor("&aГильдия %s&a успешно удалена!".formatted(guild.displayName)));
                     player.closeInventory();
                 }
 
@@ -442,11 +442,6 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         return map;
     }
 
-    private void register() {
-        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
-
     @Override
     public @NotNull Inventory getMenu() {
         Inventory inventory = Bukkit.createInventory(null, 54, getMenuTitle());
@@ -472,7 +467,6 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             inventory.setItem(43, getColorDescriptionItem());
             inventory.setItem(45, getMenuGuildIDItem());
 
-            register();
             reader.saveTimedMessage(timedMessage.setStatus(EventStatusKey.READ));
 
             return inventory;
