@@ -101,7 +101,6 @@ public abstract class ConfirmMenu extends ToolMethods implements Menu {
     }
 
     private void unregister() {
-        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
         InventoryClickEvent.getHandlerList().unregister(this);
     }
 

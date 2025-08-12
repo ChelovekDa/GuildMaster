@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -80,6 +81,19 @@ class EventLogger extends ToolMethods {
      */
     public void saveTimedMessages(TimedMessage[] messages) {
         for (TimedMessage message : messages) this.saveTimedMessage(message);
+    }
+
+    /**
+     * This method needs to delete ALL timed messages without chance to return!
+     */
+    public void deleteAllMessages() {
+        String path = "%s/%s".formatted(getPath(), TIMED_MESSAGES_FILE);
+        try {
+            Map<Object, Object> map = new HashMap<>();
+            Files.write(Paths.get(path), new JSONObject(map).toJSONString().getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

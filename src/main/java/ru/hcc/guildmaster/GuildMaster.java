@@ -4,7 +4,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.hcc.guildmaster.commands.GuildCommand;
 import ru.hcc.guildmaster.tools.Eventer;
 import ru.hcc.guildmaster.tools.Reader;
-import ru.hcc.guildmaster.tools.menus.GuildEditorMenu;
 import ru.hcc.guildmaster.tools.menus.GuildRequestsMenu;
 import ru.hcc.guildmaster.tools.menus.GuildTrackingMenu;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
