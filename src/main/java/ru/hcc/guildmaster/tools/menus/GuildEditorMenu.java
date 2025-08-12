@@ -11,7 +11,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import ru.hcc.guildmaster.GuildMaster;
 import ru.hcc.guildmaster.tools.Color;
 import ru.hcc.guildmaster.tools.Guild;
 import ru.hcc.guildmaster.tools.Reader;
@@ -22,21 +24,13 @@ import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
 import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @SuppressWarnings("deprecation")
 public class GuildEditorMenu extends ToolMethods implements Menu {
 
     private final Reader reader = new Reader();
-
     private Guild guild;
-
-    public GuildEditorMenu(Guild guild) {
-        this.guild = guild;
-    }
 
     @EventHandler
     public void onMemberCountChange(AsyncPlayerChatEvent event) {
@@ -44,31 +38,37 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         String mes = event.getMessage().replaceAll(" ", "");
 
         HashMap<String, Object> map = new HashMap<>();
-        map.put("guild", guild.id);
         map.put("uuid", player.getUniqueId().toString());
         Search search = new Search(EventNameKey.GUILD_CHANGE_COUNT_MEMBERS, EventStatusKey.NOTHING, map);
         var messages = search.search();
         if (messages.isEmpty()) return;
         else event.setCancelled(true);
 
-        byte newCount;
-        try {
-            newCount = Byte.parseByte(mes);
-        } catch (Exception e) {
-            System.out.println(colorizeMessage("Can't setting new members count in guild '%s' because was appeared an error:\n%s".formatted(guild.id, e.getMessage()), Color.RED));
-            player.sendMessage(setColor("&cНе удалось получить числовое значение с диапазоне между 1 и 127."));
-            return;
-        }
+        for (TimedMessage timedMessage : messages) {
 
-        if (guild.membersUUID.size() > newCount || newCount < 0) {
-            player.sendMessage(setColor("&cНевозможно установить такое количество участников, поскольку в гильдии состоит больше людей, чем вы хотите!"));
-            System.out.println(colorizeMessage("Can't setting new count of members in guild '%s' because now count of members more than need to set.".formatted(guild.id), Color.RED));
-            return;
-        }
+            String guildId = String.valueOf(timedMessage.customValues.get("guild"));
+            if (timedMessage.customValues.get("guild") == null) continue;
+            Guild guild = Objects.requireNonNull(reader.getGuilds()).get(guildId);
 
-        guild.maxMembersCount = newCount;
-        reader.writeGuild(guild);
-        player.sendMessage(setColor("&aМаксимальное количество игроков изменено на %s".formatted(String.valueOf(newCount))));
+            byte newCount;
+            try {
+                newCount = Byte.parseByte(mes);
+            } catch (Exception e) {
+                System.out.println(colorizeMessage("Can't setting new members count in guild '%s' because was appeared an error:\n%s".formatted(guild.id, e.getMessage()), Color.RED));
+                player.sendMessage(setColor("&cНе удалось получить числовое значение с диапазоне между 1 и 127."));
+                return;
+            }
+
+            if (guild.membersUUID.size() > newCount || newCount < 0) {
+                player.sendMessage(setColor("&cНевозможно установить такое количество участников, поскольку в гильдии состоит больше людей, чем вы хотите!"));
+                System.out.println(colorizeMessage("Can't setting new count of members in guild '%s' because now count of members more than need to set.".formatted(guild.id), Color.RED));
+                return;
+            }
+
+            guild.maxMembersCount = newCount;
+            reader.writeGuild(guild);
+            player.sendMessage(setColor("&aМаксимальное количество участников гильдии %s&a изменено на %s&a!".formatted(guild.displayName, String.valueOf(newCount))));
+        }
 
     }
 
@@ -78,43 +78,51 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         String mes = event.getMessage();
 
         HashMap<String, Object> map = new HashMap<>();
-        map.put("guild", guild.id);
         map.put("uuid", player.getUniqueId().toString());
         Search search = new Search(EventNameKey.GUILD_CHANGE_NAME, EventStatusKey.NOTHING, map);
         var messages = search.search();
         if (messages.isEmpty()) return;
         else event.setCancelled(true);
 
-        ConfirmMenu menu = new ConfirmMenu() {
-            @Override
-            protected void onConfirm() {
-                guild.displayName = mes;
+        for (TimedMessage timedMessage : messages) {
 
-                TimedMessage timedMessage = messages.getFirst();
-                timedMessage.setStatus(EventStatusKey.WAITING);
-                reader.saveTimedMessage(timedMessage);
+            String guildID = String.valueOf(timedMessage.customValues.get("guild"));
+            if (guildID == null) continue;
+            Guild guild = Objects.requireNonNull(reader.getGuilds()).get(guildID);
 
-                player.sendMessage(setColor("&aНазвание гильдии успешно изменено!"));
+            ConfirmMenu menu = new ConfirmMenu() {
+                @Override
+                protected void onConfirm() {
+                    guild.displayName = mes;
+
+                    TimedMessage timedMessage = messages.getFirst();
+                    timedMessage.setStatus(EventStatusKey.WAITING);
+                    reader.saveTimedMessage(timedMessage);
+
+                    player.sendMessage(setColor("&aНазвание гильдии успешно изменено!"));
+                    player.closeInventory();
+                }
+
+                @Override
+                protected @NotNull String[] getConfirmLore() {
+                    return new String[] {"", "&fВы уверены, что хотите изменить название гильдии с '%s'&f на '%s'&f?", ""};
+                }
+
+                @Override
+                protected void onCancel() {
+                    TimedMessage timedMessage = messages.getFirst();
+                    timedMessage.setStatus(EventStatusKey.READ);
+                    reader.saveTimedMessage(timedMessage);
+
+                    player.sendMessage(setColor("&aДействие отменено."));
+                    player.closeInventory();
+                }
+            };
+            Bukkit.getScheduler().runTask(GuildMaster.getPlugin(GuildMaster.class), () -> {
                 player.closeInventory();
-            }
-
-            @Override
-            protected @NotNull String[] getConfirmLore() {
-                return new String[] {"", "&fВы уверены, что хотите изменить название гильдии с '%s'&f на '%s'&f?", ""};
-            }
-
-            @Override
-            protected void onCancel() {
-                TimedMessage timedMessage = messages.getFirst();
-                timedMessage.setStatus(EventStatusKey.READ);
-                reader.saveTimedMessage(timedMessage);
-
-                player.sendMessage(setColor("&aДействие отменено."));
-                player.closeInventory();
-            }
-        };
-        player.closeInventory();
-        player.openInventory(menu.getMenu());
+                player.openInventory(menu.getMenu());
+            });
+        }
 
     }
 
@@ -124,63 +132,70 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         String mes = event.getMessage().replaceAll(" ", "");
 
         HashMap<String, Object> map = new HashMap<>();
-        map.put("guild", guild.id);
         map.put("uuid", player.getUniqueId().toString());
         Search search = new Search(EventNameKey.GUILD_CHANGE_MASTER, EventStatusKey.NOTHING, map);
         var messages = search.search();
         if (messages.isEmpty()) return;
         else event.setCancelled(true);
 
-        for (Player pl : Bukkit.getOnlinePlayers()) {
-            if (pl.getName().equals(mes)) {
-                var guilds = reader.getGuilds();
-                assert guilds != null;
+        for (TimedMessage timedMessage : messages) {
 
-                for (String id : guilds.keySet()) {
-                    Guild g = guilds.get(id);
-                    for (String uuid : g.membersUUID) {
-                        if (uuid.equals(pl.getUniqueId().toString()) && !g.id.equals(guild.id)) {
-                            TimedMessage timedMessage = messages.getFirst();
-                            timedMessage.setStatus(EventStatusKey.READ);
-                            reader.saveTimedMessage(timedMessage);
-                            player.sendMessage(setColor("&cДанный игрок уже состоит в другой гильдии."));
-                            return;
-                        }
-                        else if (uuid.equals(pl.getUniqueId().toString()) && g.id.equals(guild.id)) {
-                            ConfirmMenu menu = new ConfirmMenu() {
-                                @Override
-                                protected void onConfirm() {
-                                    guild.guildMasterUUID = pl.getUniqueId().toString();
-                                    reader.writeGuild(guild);
+            String guildID = String.valueOf(timedMessage.customValues.get("guild"));
+            if (guildID == null) continue;
+            Guild guild = Objects.requireNonNull(reader.getGuilds()).get(guildID);
 
-                                    TimedMessage timedMessage = messages.getFirst();
-                                    timedMessage.setStatus(EventStatusKey.WAITING);
-                                    reader.saveTimedMessage(timedMessage);
+            for (Player pl : Bukkit.getOnlinePlayers()) {
+                if (pl.getName().equals(mes)) {
+                    var guilds = reader.getGuilds();
+                    assert guilds != null;
 
-                                    player.sendMessage(setColor("&aИгрок %s установлен в качестве главы гильдии!".formatted(pl.getName())));
-                                    player.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
-                                    pl.sendMessage(setColor("&aПоздравляем! Вы были повышены до главы гильдии %s! Будьте справедливы.".formatted(guild.displayName)));
-                                    broadcastMessage("&fИгрок &f%s стал главой гильдии %s&f!".formatted(pl.getName(), guild.displayName), -1, null);
+                    for (String id : guilds.keySet()) {
+                        Guild g = guilds.get(id);
+                        for (String uuid : g.membersUUID) {
+                            if (uuid.equals(pl.getUniqueId().toString()) && !g.id.equals(guild.id)) {
+                                timedMessage.setStatus(EventStatusKey.READ);
+                                reader.saveTimedMessage(timedMessage);
+                                player.sendMessage(setColor("&cДанный игрок уже состоит в другой гильдии."));
+                                return;
+                            }
+                            else if (uuid.equals(pl.getUniqueId().toString()) && g.id.equals(guild.id)) {
+                                ConfirmMenu menu = new ConfirmMenu() {
+                                    @Override
+                                    protected void onConfirm() {
+                                        guild.guildMasterUUID = pl.getUniqueId().toString();
+                                        reader.writeGuild(guild);
+
+                                        TimedMessage timedMessage = messages.getFirst();
+                                        timedMessage.setStatus(EventStatusKey.WAITING);
+                                        reader.saveTimedMessage(timedMessage);
+
+                                        player.sendMessage(setColor("&aИгрок %s установлен в качестве главы гильдии!".formatted(pl.getName())));
+                                        player.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
+                                        pl.sendMessage(setColor("&aПоздравляем! Вы были повышены до главы гильдии %s! Будьте справедливы.".formatted(guild.displayName)));
+                                        broadcastMessage("&fИгрок &f%s стал главой гильдии %s&f!".formatted(pl.getName(), guild.displayName), -1, null);
+                                        player.closeInventory();
+                                    }
+
+                                    @Override
+                                    protected @NotNull String[] getConfirmLore() {
+                                        return new String[] {"", "&fВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока '%s'?".formatted(pl.getName()), ""};
+                                    }
+
+                                    @Override
+                                    protected void onCancel() {
+                                        TimedMessage timedMessage = messages.getFirst();
+                                        timedMessage.setStatus(EventStatusKey.READ);
+                                        reader.saveTimedMessage(timedMessage);
+                                        player.sendMessage(setColor("&aДействие отменено."));
+                                        player.closeInventory();
+                                    }
+                                };
+                                Bukkit.getScheduler().runTask(GuildMaster.getPlugin(GuildMaster.class), () -> {
                                     player.closeInventory();
-                                }
-
-                                @Override
-                                protected @NotNull String[] getConfirmLore() {
-                                    return new String[] {"", "&fВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока '%s'?".formatted(pl.getName()), ""};
-                                }
-
-                                @Override
-                                protected void onCancel() {
-                                    TimedMessage timedMessage = messages.getFirst();
-                                    timedMessage.setStatus(EventStatusKey.READ);
-                                    reader.saveTimedMessage(timedMessage);
-                                    player.sendMessage(setColor("&aДействие отменено."));
-                                    player.closeInventory();
-                                }
-                            };
-                            player.closeInventory();
-                            player.openInventory(menu.getMenu());
-                            return;
+                                    player.openInventory(menu.getMenu());
+                                });
+                                return;
+                            }
                         }
                     }
                 }
@@ -214,10 +229,12 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
         var guilds = reader.getGuilds();
         assert guilds != null;
+        guild = null;
         for (String guildId : guilds.keySet()) {
-            if (guildId.equals(id)) this.guild = guilds.get(guildId);
+            if (guildId.equals(id)) guild = guilds.get(guildId);
         }
-        if (this.guild == null) {
+
+        if (guild == null) {
             player.closeInventory();
             player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
             System.out.println(colorizeMessage("Can't get guild because source is null.", Color.RED));
@@ -291,7 +308,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             player.closeInventory();
             player.openInventory(menu.getMenu());
         }
-
+        unregister();
     }
 
     private static final byte[] cords = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 46, 47, 48, 49, 50, 51, 52, 53};
@@ -409,23 +426,50 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         return map;
     }
 
+    private void register() {
+        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    private void unregister() {
+        JavaPlugin plugin = GuildMaster.getPlugin(GuildMaster.class);
+        InventoryClickEvent.getHandlerList().unregister(this);
+        AsyncPlayerChatEvent.getHandlerList().unregister(this);
+    }
+
     @Override
     public @NotNull Inventory getMenu() {
         Inventory inventory = Bukkit.createInventory(null, 54, getMenuTitle());
 
-        var decors = getMenuDecorations();
-        for (int key : decors.keySet()) inventory.setItem(key, decors.get(key));
+        ArrayList<TimedMessage> messages = new Search(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING).search();
 
-        inventory.setItem(20, getMembersManipulationItem());
-        inventory.setItem(21, getSettingGuildMasterItem());
-        inventory.setItem(22, getDeleteItem());
-        inventory.setItem(23, getSetMembersCountItem());
-        inventory.setItem(24, getSetDisplayNameItem());
+        if (messages.isEmpty()) return getNullInventory();
+        TimedMessage timedMessage = messages.getFirst();
+        Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(timedMessage.customValues.get("uuid"))));
 
-        inventory.setItem(43, getColorDescriptionItem());
-        inventory.setItem(45, getMenuGuildIDItem());
+        if (player != null) {
+            guild = Objects.requireNonNull(reader.getGuilds()).get(String.valueOf(timedMessage.customValues.get("guild")));
 
-        return inventory;
+            var decors = getMenuDecorations();
+            for (int key : decors.keySet()) inventory.setItem(key, decors.get(key));
+
+            inventory.setItem(20, getMembersManipulationItem());
+            inventory.setItem(21, getSettingGuildMasterItem());
+            inventory.setItem(22, getDeleteItem());
+            inventory.setItem(23, getSetMembersCountItem());
+            inventory.setItem(24, getSetDisplayNameItem());
+
+            inventory.setItem(43, getColorDescriptionItem());
+            inventory.setItem(45, getMenuGuildIDItem());
+
+            register();
+            reader.saveTimedMessage(timedMessage.setStatus(EventStatusKey.READ));
+
+            return inventory;
+        }
+
+        reader.saveTimedMessage(timedMessage.setStatus(EventStatusKey.READ));
+        return getNullInventory();
     }
 
     @Override

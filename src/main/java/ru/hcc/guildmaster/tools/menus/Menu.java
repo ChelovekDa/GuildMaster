@@ -1,5 +1,6 @@
 package ru.hcc.guildmaster.tools.menus;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.Listener;
@@ -21,7 +22,12 @@ public interface Menu extends Listener {
 
     @NotNull
     default String getEmptyItemDescription() {
-        return "\nЕще никто ничего не подал :(\n";
+        return "\nФизика боль :(\n";
+    }
+
+    @NotNull
+    default Inventory getNullInventory() {
+        return Bukkit.createInventory(null, 27, "null");
     }
 
     @NotNull

@@ -11,7 +11,8 @@ public enum EventNameKey {
     GUILD_CHANGE_MASTER(6),
     GUILD_CHANGE_NAME(7),
     GUILD_CHANGE_COUNT_MEMBERS(8),
-    GUILD_DELETE(9);
+    GUILD_DELETE(9),
+    OPEN_GUILD_EDITOR_MENU(10);
 
     private final int id;
 

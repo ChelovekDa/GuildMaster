@@ -17,14 +17,12 @@ import ru.hcc.guildmaster.tools.Color;
 import ru.hcc.guildmaster.tools.Reader;
 import ru.hcc.guildmaster.tools.ToolMethods;
 import ru.hcc.guildmaster.tools.menus.patterns.ConfirmMenu;
+import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
 import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 
 public class GuildRequestsMenu extends ToolMethods implements Menu {
@@ -36,9 +34,9 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
         ItemStack currentItem = event.getCurrentItem();
 
-        if (currentItem == null) return;
+        if (currentItem == null || currentItem.equals(getEmptyItem())) return;
 
-        TimedMessage message = fromItemStack(currentItem);
+        TimedMessage message = getMessage(getAdditionalValues(currentItem));
         if (message == null) {
             event.getWhoClicked().sendMessage(setColor("&cВ процессе выполнения возникла ошибка! Обратитесь к администратору!"));
             System.out.println(colorizeMessage("In proccess of running the code was appeared an error!", Color.RED_BACKGROUND));
@@ -118,27 +116,34 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
         ArrayList<TimedMessage> messages = searchObject.search();
         if (!messages.isEmpty()) {
-            for (TimedMessage mes : messages) inventory.addItem(getItem(mes));
+            for (TimedMessage mes : messages) {
+                ItemStack itemStack = getItem(mes);
+                if (itemStack == null) continue;
+                inventory.addItem(itemStack);
+            }
         }
         else inventory.setItem(22, getEmptyItem());
 
         return inventory;
     }
 
-    @NotNull
+    @Nullable
     private ItemStack getItem(TimedMessage message) {
         ItemStack itemStack = ItemStack.of(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta meta = itemStack.getItemMeta();
 
         Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
-        Guild guild = Objects.requireNonNull(new Reader().getGuilds()).get(String.valueOf(message.customValues.get("guild")));
+
+        if (player == null) return null;
 
         meta.setDisplayName(setColor("&e%s".formatted(message.date)));
 
         ArrayList<String> arrayList = convertToMenu(message.message);
-        arrayList.add(0, "&fЯ, &f&o%s&f, прошу принять меня в гильдию '%s' в качестве нового участника!".formatted(player.getDisplayName(), guild.displayName));
-        arrayList.add("");
-        arrayList.add(1, "&eОбо мне:");
+        arrayList.add(0, "");
+        arrayList.add(1, "&fЗаявка на вступление в гильдию:");
+        arrayList.add(2, "&fАйди гильдии: %s".formatted(message.customValues.get("guild")));
+        arrayList.add(3, "&fИгрок: %s".formatted(player.getName()));
+        arrayList.add(4,"&fСообщение игрока:");
 
         meta.setLore(List.of(setColors(ArrayToList(arrayList))));
 
@@ -151,15 +156,27 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
     }
 
     @Nullable
-    private TimedMessage fromItemStack(ItemStack itemStack) {
-        ArrayList<TimedMessage> messages = searchObject.search();
-
-        for (TimedMessage mes : messages) {
-            ItemStack stack = getItem(mes);
-            if (Objects.equals(stack, itemStack)) return mes;
+    private TimedMessage getMessage(HashMap<String, Object> additionalValues) {
+        Search search = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues);
+        try {
+            return search.search().getFirst();
+        } catch (Exception e) {
+            return null;
         }
+    }
 
-        return null;
+    private HashMap<String, Object> getAdditionalValues(ItemStack stack) {
+        List<String> lore = stack.getItemMeta().getLore();
+        HashMap<String, Object> map = new HashMap<>();
+        assert lore != null;
+
+        Player player = Bukkit.getPlayer(lore.get(3).split(" ")[1]);
+        assert player != null;
+
+        map.put("id", lore.get(2).split(" ")[2]);
+        map.put("uuid", player.getUniqueId().toString());
+
+        return map;
     }
 
 }

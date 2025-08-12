@@ -23,8 +23,8 @@ public class GuildTrackingMenu extends ToolMethods implements Menu {
 
     @EventHandler
     public void onPlayerInventoryClick(InventoryClickEvent event) {
-        event.setCancelled(true);
         if (event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) {
+            event.setCancelled(true);
             ItemStack stack = event.getCurrentItem();
             if (stack == null) return;
 

@@ -8,7 +8,7 @@ public enum EventStatusKey {
 
     private final byte id;
 
-    private EventStatusKey(final byte id) {
+    EventStatusKey(final byte id) {
         this.id = id;
     }
 

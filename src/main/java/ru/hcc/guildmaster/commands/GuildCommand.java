@@ -29,7 +29,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
     private final Reader reader = new Reader();
     private static final String[] COMMAND_VALUES = new String[] {"create", "join", "menu", "accept", "deny", "leave", "kick", "track", "edit"};
 
-    private boolean var1(boolean isConsole, @NotNull String @NotNull [] strings, @NotNull CommandSender sender) {
+    private void var1(boolean isConsole, @NotNull String @NotNull [] strings, @NotNull CommandSender sender) {
         if (strings.length == 3) {
             var guildNames = new Reader().getGuildNames();
             if (!guildNames.isEmpty()) {
@@ -43,7 +43,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     if (timedMessages.isEmpty()) {
                         if (isConsole) System.out.println(colorizeMessage("Not found active requests in this guild!", Color.RED));
                         else sender.sendMessage(setColor("&cВ этой гильдии не найдено ни одной активной заявки!"));
-                        return false;
+                        return;
                     }
 
                     for (TimedMessage mes : timedMessages) {
@@ -57,7 +57,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                             if (isConsole) System.out.println(colorizeMessage("Success added new member to guild '%s'".formatted(guild.id), Color.GREEN));
                             else sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию &a&o%s&a!".formatted(player.getDisplayName(), guild.displayName)));
-                            return true;
+                            return;
                         }
 
                     }
@@ -78,8 +78,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
             if (isConsole) System.out.println(colorizeMessage("Usage: guild accept [Guild name] [Player name|*]", Color.RED));
             else sender.sendMessage(setColor("&6Использование: /guild accept [Название гильдии] [Имя игрока]"));
         }
-
-        return false;
     }
 
     private void track(@NotNull Player target, @NotNull Player admin) {
@@ -134,18 +132,28 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Guild guild = new Guild(strings[1], null, ((Player) sender).getUniqueId().toString());
                         reader.writeGuild(guild);
 
-                        String message = setColor("&aГильдия &a&o%s &aуспешно создана!".formatted(guild.id));
+                        String message = setColor("&aГильдия &a&o%s &a успешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
                         System.out.println(colorizeMessage("Success creating new guild '%s'.".formatted(guild.id), Color.GREEN));
 
                         if (sender.hasPermission("guildmaster.guild.edit") || sender.hasPermission("guildmaster.*") || sender.isOp()) {
-                            ((Player) sender).openInventory(new GuildEditorMenu(guild).getMenu());
+
+                            GuildEditorMenu editorMenu = new GuildEditorMenu();
+
+                            HashMap<String, Object> additionalValues = new HashMap<>();
+                            additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
+                            additionalValues.put("guild", guild.id);
+                            TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                            reader.saveTimedMessage(timedMessage);
+
+                            ((Player) sender).openInventory(editorMenu.getMenu());
+
                             return true;
                         }
 
                     }
                     else {
-                        String message = setColor("&cГильдия с названием %s &cуже существует!".formatted(alreadyCreatedGuilds.get(strings[1]).id));
+                        String message = setColor("&cГильдия с названием %s &c уже существует!".formatted(alreadyCreatedGuilds.get(strings[1]).id));
                         sender.sendMessage(message);
                     }
 
@@ -350,9 +358,8 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     if (guilds != null) {
                         for (String id : guilds.keySet()) {
                             Guild guild = guilds.get(id);
-                            int iterationCount = guild.membersUUID.size();
 
-                            for (int i = 0; i < iterationCount; i++) {
+                            for (int i = 0; i < guild.membersUUID.size(); i++) {
                                 String uuid = guild.membersUUID.get(i);
                                 if (uuid.equals(((Player) sender).getUniqueId().toString())) {
                                     HashMap<String, Object> additionalValues = new HashMap<>();
@@ -361,7 +368,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                     new Reader().saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_LEAVE_GUILD, EventStatusKey.READ, "Player leave the guild", additionalValues));
 
                                     guild.membersUUID.remove(i);
-                                    iterationCount--;
                                     sender.sendMessage(setColor("&aВы успешно покинули гильдию!"));
 
                                     if (guild.guildMasterUUID.equals(uuid)) {
@@ -498,41 +504,56 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                     if (strings.length >= 2 && (sender.hasPermission("guildmaster.*") || sender.isOp())) {
 
-                        if (guilds != null) {
-                            for (String id : guilds.keySet()) {
-                                if (id.equals(strings[1].replaceAll(" ", ""))) {
-                                    ((Player) sender).openInventory(new GuildEditorMenu(guilds.get(id)).getMenu());
-                                    return true;
-                                }
-                            }
-                            sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
-                            return false;
-                        }
-                        else {
+                        if (guilds == null) {
                             sender.sendMessage(setColor("&cНе найдено ни одной созданной гильдии!"));
                             return false;
                         }
+
+                        for (String id : guilds.keySet()) {
+                            if (id.equals(strings[1].replaceAll(" ", ""))) {
+                                GuildEditorMenu editorMenu = new GuildEditorMenu();
+
+                                HashMap<String, Object> additionalValues = new HashMap<>();
+                                additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
+                                additionalValues.put("guild", guilds.get(id).id);
+                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                                reader.saveTimedMessage(timedMessage);
+
+                                ((Player) sender).openInventory(editorMenu.getMenu());
+                                return true;
+                            }
+                        }
+                        sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
+                        return false;
                     }
                     else {
 
-                        if (guilds != null) {
-                            for (String id : guilds.keySet()) {
-                                Guild guild = guilds.get(id);
-                                if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
-                                    ((Player) sender).openInventory(new GuildEditorMenu(guilds.get(id)).getMenu());
-                                    return true;
-                                }
-                            }
-                            if (sender.hasPermission("guildmaster.*") || sender.isOp()) {
-                                sender.sendMessage(setColor("&6Использование: /guild edit [Название гильдии]"));
-                            }
-                            else sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
-                            return false;
-                        }
-                        else {
+                        if (guilds == null) {
                             sender.sendMessage(setColor("&cНе найдено ни одной созданной гильдии!"));
                             return false;
                         }
+
+                        for (String id : guilds.keySet()) {
+                            Guild guild = guilds.get(id);
+                            if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                                GuildEditorMenu editorMenu = new GuildEditorMenu();
+
+                                HashMap<String, Object> additionalValues = new HashMap<>();
+                                additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
+                                additionalValues.put("guild", guild.id);
+                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                                reader.saveTimedMessage(timedMessage);
+
+                                ((Player) sender).openInventory(editorMenu.getMenu());
+                                return true;
+                            }
+                        }
+                        if (sender.hasPermission("guildmaster.*") || sender.isOp()) {
+                            sender.sendMessage(setColor("&6Использование: /guild edit [Название гильдии]"));
+                        }
+                        else sender.sendMessage(setColor("&cГильдии &c&o%s&c не существует!".formatted(strings[1])));
+                        return false;
+
                     }
 
                 }
@@ -547,7 +568,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String @NotNull [] args) {
         List<String> completions = new ArrayList<>();
-        if (args.length == 0 || args.length == 1) {
+        if (args.length == 1) {
             for (String com : COMMAND_VALUES) if (com.startsWith(args[0])) completions.add(com);
         }
         else for (Player player : Bukkit.getOnlinePlayers())

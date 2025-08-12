@@ -27,7 +27,6 @@ public final class GuildMaster extends JavaPlugin {
         Objects.requireNonNull(getServer().getPluginCommand("guild")).setTabCompleter(new GuildCommand());
 
         // menus
-        getServer().getPluginManager().registerEvents(new GuildEditorMenu(null), this);
         getServer().getPluginManager().registerEvents(new GuildRequestsMenu(new Search(EventNameKey.EMPTY_KEY, EventStatusKey.NOTHING)), this);
         getServer().getPluginManager().registerEvents(new GuildTrackingMenu(), this);
 
