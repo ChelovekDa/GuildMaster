@@ -36,6 +36,12 @@ public class Search {
         this.additionalValues = new HashMap<>();
     }
 
+    public Search(@NotNull HashMap<String, Object> additionalValues) {
+        this.eventNameKey = null;
+        this.eventStatusKey = null;
+        this.additionalValues = additionalValues;
+    }
+
     @NotNull
     public ArrayList<TimedMessage> search() {
         ArrayList<TimedMessage> result = new ArrayList<>();
@@ -43,8 +49,20 @@ public class Search {
         ArrayList<TimedMessage> allMessages = new Reader().getTimedMessages();
 
         if (this.eventNameKey == null && this.eventStatusKey == null) {
-            for (TimedMessage message : allMessages) {
-                if (message.eventStatusKey.equals(EventStatusKey.WAITING)) result.add(message);
+            for (TimedMessage mes : allMessages) {
+                if (mes.eventStatusKey.equals(EventStatusKey.WAITING)) {
+                    if (!this.additionalValues.isEmpty()) {
+                        byte res = 1;
+                        for (String key : this.additionalValues.keySet()) {
+                            if (mes.customValues.containsKey(key) && !Objects.equals(mes.customValues.get(key), additionalValues.get(key))) {
+                                res--;
+                                break;
+                            }
+                        }
+                        if (res != 0) result.add(mes);
+                    }
+                    else result.add(mes);
+                }
             }
         }
         else if (!allMessages.isEmpty()) {

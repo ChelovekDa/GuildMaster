@@ -38,6 +38,10 @@ public class TimedMessage {
         this.message = "Hello!";
     }
 
+    public Search getSearchInstance() {
+        return new Search(this.eventNameKey, this.eventStatusKey, this.customValues);
+    }
+
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
 

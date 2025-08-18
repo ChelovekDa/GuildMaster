@@ -5,10 +5,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.hcc.guildmaster.GuildMaster;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 
 public class ToolMethods {
 
@@ -87,6 +89,28 @@ public class ToolMethods {
 
     private static String var1(String[] strings) {
         return "&%s%s&f - &&f%s&f\n".formatted(strings[0], strings[1], strings[0]);
+    }
+
+    /**
+     * This method needs to get Player object from his UUID
+     * @param uuid player's uuid
+     * @return Player object or null
+     */
+    @Nullable
+    public Player getPlayer(UUID uuid) {
+        var players = Bukkit.getOnlinePlayers();
+        if (!players.isEmpty()) for (Player pl : players) if (pl.getUniqueId().equals(uuid)) return pl;
+        return Bukkit.getOfflinePlayer(uuid).getPlayer();
+    }
+
+    @NotNull
+    public static String getRequestsColor() {
+        return "&6";
+    }
+
+    @NotNull
+    public static String removeHistory(String original) {
+        return original.replaceAll("§", "&");
     }
 
     /**

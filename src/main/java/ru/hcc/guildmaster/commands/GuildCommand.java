@@ -50,13 +50,12 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(mes.customValues.get("uuid"))));
                         if (player == null) continue;
 
-                        if (player.getDisplayName().equals(strings[2])) {
-                            new Reader().saveTimedMessage(mes.setStatus(EventStatusKey.READ));
-                            Guild guild = Objects.requireNonNull(new Reader().getGuilds()).get(strings[1]);
-                            guild.addMember(player);
+                        if (player.getName().equals(strings[2])) {
+                            reader.saveTimedMessage(mes.setStatus(EventStatusKey.READ));
+                            Guild guild = Objects.requireNonNull(reader.getGuilds()).get(strings[1]).addMember(player);
 
                             if (isConsole) System.out.println(colorizeMessage("Success added new member to guild '%s'".formatted(guild.id), Color.GREEN));
-                            else sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию &a&o%s&a!".formatted(player.getDisplayName(), guild.displayName)));
+                            else sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию &a&o%s&a!".formatted(player.getName(), guild.displayName)));
                             return;
                         }
 
@@ -132,7 +131,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Guild guild = new Guild(strings[1], null, ((Player) sender).getUniqueId().toString());
                         reader.writeGuild(guild);
 
-                        String message = setColor("&aГильдия &a&o%s &aуспешно создана!".formatted(guild.id));
+                        String message = setColor("&aГильдия &a&o%s&a успешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
                         System.out.println(colorizeMessage("Success creating new guild '%s'.".formatted(guild.id), Color.GREEN));
 
@@ -143,7 +142,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                             HashMap<String, Object> additionalValues = new HashMap<>();
                             additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
                             additionalValues.put("guild", guild.id);
-                            TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                            TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, EventNameKey.OPEN_GUILD_EDITOR_MENU.getMessage(), additionalValues);
                             reader.saveTimedMessage(timedMessage);
 
                             ((Player) sender).openInventory(editorMenu.getMenu());
@@ -171,7 +170,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                             Guild guild = alreadyCreatedGuilds.get(id);
                             for (String uuid : guild.membersUUID) {
                                 if (uuid.equals(((Player) sender).getUniqueId().toString())) {
-                                    String message = setColor("&cВы не можете состоять сразу в нескольких гильдиях!\n&cЧтобы вступить, покиньте прошлую гильдию!");
+                                    String message = setColor("&cВы не можете состоять сразу в нескольких гильдиях!");
                                     sender.sendMessage(message);
                                     return false;
                                 }
@@ -182,7 +181,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                         if (guild.maxMembersCount <= guild.membersUUID.size()) {
                             sender.sendMessage(setColor("&cВы не можете вступить в гильдию: свободных мест нет!"));
-                            System.out.println(colorizeMessage("Player %s can't join the '%s' guild because it's full!".formatted(((Player) sender).getDisplayName(), guild.id), Color.RED));
                             return false;
                         }
 
@@ -202,14 +200,13 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                 map
                         );
 
-                        new Reader().saveTimedMessage(timedMessage);
+                        reader.saveTimedMessage(timedMessage);
 
                         sender.sendMessage(setColor("&aВы успешно подали заявку на вступление в гильдию %s&a!".formatted(setColor(guild.displayName))));
-                        sender.sendMessage(setColor("&aОжидайте рассмотрение заявки главой гильдии или администратором. Текущий глава гильдии: &b&l%s&a!".formatted(Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(guild.guildMasterUUID))).getName())));
-                        System.out.println(colorizeMessage("Player %s success to call the request to join in guild '%s'".formatted(sender.getName(), guild.id), Color.GREEN));
+                        sender.sendMessage(setColor("&aОжидайте рассмотрение заявки главой гильдии или администратором. Текущий глава гильдии: &b&l%s&a!".formatted(guild.getGuildMasterName())));
 
                         for (Player player : Bukkit.getOnlinePlayers()) {
-                            if (player.getUniqueId().toString().equals(guild.guildMasterUUID)) {
+                            if (player.getUniqueId().toString().equals(guild.getGuildMasterUUID())) {
                                 player.sendMessage(setColor("&aПоявилась новая заявка!"));
                             }
                             else if (player.isOp() || player.hasPermission("guildmaster.*")) {
@@ -232,7 +229,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Guild guild = null;
 
                         for (String guildID : allGuilds.keySet()) {
-                            if (allGuilds.get(guildID).guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                            if (allGuilds.get(guildID).getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
                                 guild = allGuilds.get(guildID);
                                 break;
                             }
@@ -264,7 +261,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                 Search search = new Search(null, null);
                                 ((Player) sender).openInventory(new GuildRequestsMenu(search).getMenu());
                             }
-                            else unSetPermission("guildmaster.guild.menu", ((Player) sender).getPlayer());
                         }
                         else {
                             Search search = guild.getSearchObject();
@@ -286,7 +282,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         if (guilds != null) {
                             for (String guildID : guilds.keySet()) {
                                 Guild guild = guilds.get(guildID);
-                                if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                                if (guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
 
                                     HashMap<String, Object> additionalValues = new HashMap<>();
                                     additionalValues.put("guild", guild.id);
@@ -300,14 +296,14 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                     }
                                     else {
                                         for (TimedMessage mes : timedMessages) {
-                                            Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(mes.customValues.get("uuid"))));
+                                            Player player = getPlayer(UUID.fromString(String.valueOf(mes.customValues.get("uuid"))));
                                             if (player == null) continue;
 
                                             if (player.getDisplayName().equals(strings[1])) {
-                                                new Reader().saveTimedMessage(mes.setStatus(EventStatusKey.READ));
+                                                reader.saveTimedMessage(mes.setStatus(EventStatusKey.READ));
                                                 guild.addMember(player);
 
-                                                sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию &a&o%s&a!".formatted(player.getDisplayName(), guild.displayName)));
+                                                sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию &a&o%s&a!".formatted(player.getName(), guild.displayName)));
                                                 return true;
                                             }
                                         }
@@ -332,7 +328,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     if (guilds != null) {
                         for (String id : guilds.keySet()) {
                             Guild guild = guilds.get(id);
-                            if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                            if (guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
                                 HashMap<String, Object> additionalValues = new HashMap<>();
                                 additionalValues.put("guild", guild.id);
                                 ArrayList<TimedMessage> messages = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues).search();
@@ -346,9 +342,9 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                     if (player == null) continue;
 
                                     if (player.getDisplayName().equals(strings[1])) {
-                                        new Reader().saveTimedMessage(mes.setStatus(EventStatusKey.READ));
+                                        reader.saveTimedMessage(mes.setStatus(EventStatusKey.READ));
 
-                                        sender.sendMessage(setColor("&aЗаявка игрока '%s' отклонена!".formatted(player.getDisplayName())));
+                                        sender.sendMessage(setColor("&aЗаявка игрока '%s' отклонена!".formatted(player.getName())));
                                         return true;
                                     }
                                 }
@@ -368,29 +364,26 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     if (guilds != null) {
                         for (String id : guilds.keySet()) {
                             Guild guild = guilds.get(id);
+                            String uuid = ((Player) sender).getUniqueId().toString();
 
-                            for (int i = 0; i < guild.membersUUID.size(); i++) {
-                                String uuid = guild.membersUUID.get(i);
-                                if (uuid.equals(((Player) sender).getUniqueId().toString())) {
-                                    HashMap<String, Object> additionalValues = new HashMap<>();
-                                    additionalValues.put("guild", guild.id);
-                                    additionalValues.put("uuid", uuid);
+                            if (guild.contains(uuid)) {
+                                HashMap<String, Object> additionalValues = new HashMap<>();
+                                additionalValues.put("guild", guild.id);
+                                additionalValues.put("uuid", uuid);
 
-                                    guild.membersUUID.remove(i);
-                                    sender.sendMessage(setColor("&aВы успешно покинули гильдию!"));
+                                guild.kickPlayer((Player) sender);
+                                sender.sendMessage(setColor("&aВы успешно покинули гильдию!"));
 
-                                    if (guild.guildMasterUUID.equals(uuid)) {
-                                        for (OfflinePlayer offlinePlayer : Bukkit.getServer().getOperators()) {
-                                            guild.guildMasterUUID = Objects.requireNonNull(offlinePlayer.getPlayer()).getUniqueId().toString();
-                                            new Reader().saveTimedMessage(new TimedMessage(EventNameKey.GUILD_MASTER_LEAVE_GUILD, EventStatusKey.WAITING, "Guild master %s leave yourself guild '%s'".formatted(((Player) sender).getDisplayName(), guild.id), additionalValues));
-                                            removeGuildMasterPerms(((Player) sender).getPlayer());
-                                            broadcastMessage("&6На пост временно исполняющего обязанности главы гильдии %s&6 назначен администратор &6&l%s&6, поскольку бывший глава покинул гильдию.".formatted(guild.displayName, offlinePlayer.getPlayer().getDisplayName()), -1, null);
-                                            break;
-                                        }
+                                if (guild.getGuildMasterUUID().equals(uuid)) {
+                                    for (OfflinePlayer offlinePlayer : Bukkit.getServer().getOperators()) {
+                                        guild = guild.setGuildMasterUUID(Objects.requireNonNull(offlinePlayer.getPlayer()).getUniqueId().toString());
+                                        reader.saveTimedMessage(new TimedMessage(EventNameKey.GUILD_MASTER_LEAVE_GUILD, EventStatusKey.WAITING, EventNameKey.GUILD_MASTER_LEAVE_GUILD.getMessage(), additionalValues));
+                                        broadcastMessage("&6На пост временно исполняющего обязанности главы гильдии %s&6 назначен администратор &6&l%s&6, поскольку бывший глава покинул гильдию.".formatted(guild.displayName, offlinePlayer.getPlayer().getName()), -1, null);
+                                        break;
                                     }
-                                    new Reader().writeGuild(guild);
-                                    return true;
                                 }
+                                new Reader().writeGuild(guild);
+                                return true;
                             }
                         }
                     }
@@ -417,7 +410,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                         return false;
                                     }
 
-                                    if (sender.hasPermission("guildmaster.*") || sender.isOp() || guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                                    if (sender.hasPermission("guildmaster.*") || sender.isOp() || guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
 
                                         ConfirmMenu confirmMenu = new ConfirmMenu() {
                                             @Override
@@ -425,7 +418,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                                 HashMap<String, Object> additionalValues = new HashMap<>();
                                                 additionalValues.put("guild", guild.id);
                                                 additionalValues.put("uuid", player.getUniqueId().toString());
-                                                reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, "Player was kicked from the guild.", additionalValues));
+                                                reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, EventNameKey.PLAYER_KICK_FROM_GUILD.getMessage(), additionalValues));
 
                                                 guild.membersUUID.remove(uuid);
                                                 reader.writeGuild(guild);
@@ -474,8 +467,8 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                             if (guilds != null) {
                                 for (String id : guilds.keySet()) {
                                     Guild guild = guilds.get(id);
-                                    if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
-                                        if (guild.guildMasterUUID.equals(player.getUniqueId().toString())) {
+                                    if (guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
+                                        if (guild.getGuildMasterUUID().equals(player.getUniqueId().toString())) {
                                             sender.sendMessage(setColor("&cСледить за собой надо не так! Иди помойся!"));
                                             return false;
                                         }
@@ -491,7 +484,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                         }
                                     }
                                 }
-                                unSetPermission("guildmaster.guild.track", ((Player) sender).getPlayer());
                                 return false;
                             }
                             else sender.sendMessage(setColor("&cНе найдено ни одной созданной гильдии!"));
@@ -523,7 +515,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                 HashMap<String, Object> additionalValues = new HashMap<>();
                                 additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
                                 additionalValues.put("guild", guilds.get(id).id);
-                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, EventNameKey.OPEN_GUILD_EDITOR_MENU.getMessage(), additionalValues);
                                 reader.saveTimedMessage(timedMessage);
 
                                 ((Player) sender).openInventory(editorMenu.getMenu());
@@ -542,13 +534,13 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                         for (String id : guilds.keySet()) {
                             Guild guild = guilds.get(id);
-                            if (guild.guildMasterUUID.equals(((Player) sender).getUniqueId().toString())) {
+                            if (guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
                                 GuildEditorMenu editorMenu = new GuildEditorMenu();
 
                                 HashMap<String, Object> additionalValues = new HashMap<>();
                                 additionalValues.put("uuid", ((Player) sender).getUniqueId().toString());
                                 additionalValues.put("guild", guild.id);
-                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, "Open guild editor menu (Not sending to admins)", additionalValues);
+                                TimedMessage timedMessage = new TimedMessage(EventNameKey.OPEN_GUILD_EDITOR_MENU, EventStatusKey.NOTHING, EventNameKey.OPEN_GUILD_EDITOR_MENU.getMessage(), additionalValues);
                                 reader.saveTimedMessage(timedMessage);
 
                                 ((Player) sender).openInventory(editorMenu.getMenu());

@@ -30,7 +30,7 @@ public class Eventer extends ToolMethods implements Listener {
             if (guilds != null) {
                 for (String id : guilds.keySet()) {
                     Guild guild = guilds.get(id);
-                    if (guild.guildMasterUUID.equals(event.getPlayer().getUniqueId().toString())) {
+                    if (guild.getGuildMasterUUID().equals(event.getPlayer().getUniqueId().toString())) {
                         HashMap<String, Object> additionalValues = new HashMap<>();
                         additionalValues.put("guild", guild.id);
                         ArrayList<TimedMessage> timedMessages = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues).search();

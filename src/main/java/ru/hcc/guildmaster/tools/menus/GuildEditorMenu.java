@@ -161,16 +161,14 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
                             ConfirmMenu menu = new ConfirmMenu() {
                                 @Override
                                 protected void onConfirm() {
-                                    guild.guildMasterUUID = pl.getUniqueId().toString();
+                                    guild.setGuildMasterUUID(pl.getUniqueId().toString());
                                     reader.writeGuild(guild);
 
                                     TimedMessage timedMessage = messages.getFirst();
                                     timedMessage.setStatus(EventStatusKey.WAITING);
                                     reader.saveTimedMessage(timedMessage);
 
-                                    player.sendMessage(setColor("&aИгрок %s установлен в качестве главы гильдии!".formatted(pl.getName())));
                                     player.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
-                                    pl.sendMessage(setColor("&aПоздравляем! Вы были повышены до главы гильдии %s!&a Будьте справедливы.".formatted(guild.displayName)));
                                     broadcastMessage("&6Игрок %s&6 стал главой гильдии %s&6!".formatted(pl.getName(), guild.displayName), -1, null);
                                     player.closeInventory();
                                 }
@@ -264,7 +262,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             HashMap<String, Object> map = new HashMap<>();
             map.put("guild", guild.id);
             map.put("uuid", player.getUniqueId().toString());
-            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_MASTER, EventStatusKey.NOTHING, "Guild change master", map);
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_MASTER, EventStatusKey.NOTHING, EventNameKey.GUILD_CHANGE_MASTER.getMessage(), map);
 
             reader.saveTimedMessage(message);
             player.closeInventory();
@@ -369,7 +367,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName(setColor("&a&lНазначить главу гильдии"));
-        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет назначить нового главу гильдии.", "&fТекущий глава гильдии: &b%s&f".formatted(Objects.requireNonNull(Bukkit.getPlayer(UUID.fromString(guild.guildMasterUUID))).getName()), "&cПредупреждение!&f Информацию о назначении нового главы увидят все игроки!\n&fНовый глава гильдии должен быть онлайн и состоять в гильдии как участник..", ""})));
+        meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет назначить нового главу гильдии.", "&fТекущий глава гильдии: &b%s&f".formatted(guild.getGuildMasterName()), "&cПредупреждение!&f Информацию о назначении нового главы увидят все игроки!", "&fНовый глава гильдии должен быть &f&nонлайн&f.", ""})));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.LOOTING, 1, false);
 

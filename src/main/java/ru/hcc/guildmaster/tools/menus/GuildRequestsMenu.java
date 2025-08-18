@@ -62,6 +62,9 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                             admin.closeInventory();
                             admin.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию %s&a!".formatted(player.getName(), guild.displayName)));
                             if (player.isOnline()) player.sendMessage(setColor(guild.getSuccessMemberJoinMessage()));
+
+                            for (TimedMessage mes : message.getSearchInstance().search())
+                                new Reader().saveTimedMessage(mes.setStatus(EventStatusKey.READ));
                         }
                     }
                     else {
@@ -140,14 +143,27 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
         meta.setDisplayName(setColor("&e%s".formatted(message.date)));
 
-        ArrayList<String> arrayList = convertToMenu(message.message);
-        arrayList.add(0, "");
-        arrayList.add(1, "&fЗаявка на вступление в гильдию:");
-        arrayList.add(2, "&fАйди гильдии: %s".formatted(message.customValues.get("guild")));
-        arrayList.add(3, "&fИгрок: %s".formatted(player.getName()));
-        arrayList.add(4,"&fСообщение игрока:");
+        if (message.eventNameKey.equals(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD)) {
+            ArrayList<String> arrayList = convertToMenu(message.message);
+            arrayList.add(0, "");
+            arrayList.add(1, "&fЗаявка на вступление в гильдию:");
+            arrayList.add(2, "&fАйди гильдии: %s%s".formatted(getRequestsColor(), message.customValues.get("guild")));
+            arrayList.add(3, "&fИгрок: %s%s".formatted(getRequestsColor(), player.getName()));
+            arrayList.add(4,"&fСообщение игрока:");
+            arrayList.add(5, "");
 
-        meta.setLore(List.of(setColors(ArrayToList(arrayList))));
+            meta.setLore(List.of(setColors(ArrayToList(arrayList))));
+        }
+        else {
+            ArrayList<String> arrayList = convertToMenu(message.message);
+            arrayList.add(0, "");
+            arrayList.add(1, "&fДействие: %s%s".formatted(getRequestsColor(), message.eventNameKey.getMessage()));
+            arrayList.add(2, "&fАйди гильдии: %s%s".formatted(getRequestsColor(), message.customValues.get("guild")));
+            arrayList.add(3, "&fАктивировал: %s%s".formatted(getRequestsColor(), player.getName()));
+            arrayList.add(4, "");
+
+            meta.setLore(List.of(setColors(ArrayToList(arrayList))));
+        }
 
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.AQUA_AFFINITY, 1, true);
@@ -172,10 +188,12 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         HashMap<String, Object> map = new HashMap<>();
         assert lore != null;
 
-        Player player = Bukkit.getPlayer(lore.get(3).split(" ")[1]);
+        String nickname = removeHistory(lore.get(3).split(" ")[1]).replace(getRequestsColor(), "");
+        System.out.println(nickname);
+        Player player = Bukkit.getPlayer(nickname);
         assert player != null;
 
-        map.put("id", lore.get(2).split(" ")[2]);
+        map.put("guild", removeHistory(lore.get(2).split(" ")[2]).replace(getRequestsColor(), ""));
         map.put("uuid", player.getUniqueId().toString());
 
         return map;

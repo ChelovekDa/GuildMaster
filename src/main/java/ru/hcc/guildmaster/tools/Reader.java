@@ -130,7 +130,7 @@ public class Reader extends PlayerTrackingLogger {
         if (jsonObject != null) {
             for (Object guildKey : jsonObject.keySet()) {
                 JSONObject guild_object = (JSONObject) jsonObject.get(guildKey);
-                Guild guild = new Guild("", "", null, "");
+                Guild guild = new Guild("", null, "");
 
                 for (Object key : guild_object.keySet()) {
 
@@ -144,16 +144,16 @@ public class Reader extends PlayerTrackingLogger {
                         guild.maxMembersCount = ((Number) guild_object.get(key)).byteValue();
 
                     else if (Objects.equals(key, "guildMasterUUID"))
-                        guild.guildMasterUUID = String.valueOf(guild_object.get(key));
+                        guild.setGuildMasterUUID(String.valueOf(guild_object.get(key)));
 
                     else if (Objects.equals(key, "membersUUID")) {
                         JSONArray array = (JSONArray) guild_object.get(key);
                         if (!array.isEmpty()) {
-                            ArrayList<String> uuids = new ArrayList<>();
-                            for (int i = 0; i < array.size(); i++) uuids.add(i, String.valueOf(array.get(i)));
+                            HashSet<String> uuids = new HashSet<>();
+                            for (Object value : array) uuids.add(String.valueOf(value));
                             guild.membersUUID = uuids;
                         }
-                        else guild.membersUUID = new ArrayList<>();
+                        else guild.membersUUID = new HashSet<>();
                     }
                 }
 
