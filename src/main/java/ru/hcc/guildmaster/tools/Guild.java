@@ -119,6 +119,11 @@ public class Guild extends PermissionTools {
     }
 
     @NotNull
+    public String getInfo() {
+        return "&6Информация о гильдии:\n&6- Название: %s&6\n&6- Айди: %s\n&6- Глава гильдии: %s\n&6- Количество участников: %s".formatted(this.displayName, this.id, this.getGuildMasterName(), this.membersUUID.size());
+    }
+
+    @NotNull
     public Guild addMember(Player player) {
         this.membersUUID.add(player.getUniqueId().toString());
         new Reader().writeGuild(this);
