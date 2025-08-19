@@ -1,5 +1,7 @@
 package ru.hcc.guildmaster.tools.timed;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum EventNameKey {
 
     EMPTY_KEY(0, "Nothing"),
@@ -30,12 +32,13 @@ public enum EventNameKey {
         return id;
     }
 
+    public static EventNameKey getByMessage(@NotNull String message) {
+        for (EventNameKey value : values()) if (value.message.equals(message)) return value;
+        throw new IllegalArgumentException("No enum constant with message " + message);
+    }
+
     public static EventNameKey getById(int id) {
-        for (EventNameKey value : values()) {
-            if (value.id == id) {
-                return value;
-            }
-        }
+        for (EventNameKey value : values()) if (value.id == id) return value;
         throw new IllegalArgumentException("No enum constant with id " + id);
     }
 }

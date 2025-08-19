@@ -141,60 +141,59 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
 
         String guildID = String.valueOf(timedMessage.customValues.get("guild"));
         if (guildID == null) return;
-        Guild guild = Objects.requireNonNull(reader.getGuilds()).get(guildID);
+        var guilds = reader.getGuilds();
+        Guild guild = Objects.requireNonNull(guilds).get(guildID);
 
         for (Player pl : Bukkit.getOnlinePlayers()) {
             if (pl.getName().equals(mes)) {
-                var guilds = reader.getGuilds();
-                assert guilds != null;
-
                 for (String id : guilds.keySet()) {
                     Guild g = guilds.get(id);
-                    for (String uuid : g.membersUUID) {
-                        if (uuid.equals(pl.getUniqueId().toString()) && !g.id.equals(guild.id)) {
-                            timedMessage.setStatus(EventStatusKey.READ);
-                            reader.saveTimedMessage(timedMessage);
-                            player.sendMessage(setColor("&cДанный игрок уже состоит в другой гильдии."));
-                            return;
-                        }
-                        else if (uuid.equals(pl.getUniqueId().toString()) && g.id.equals(guild.id)) {
-                            ConfirmMenu menu = new ConfirmMenu() {
-                                @Override
-                                protected void onConfirm() {
-                                    guild.setGuildMasterUUID(pl.getUniqueId().toString());
-                                    reader.writeGuild(guild);
-
-                                    TimedMessage timedMessage = messages.getFirst();
-                                    timedMessage.setStatus(EventStatusKey.WAITING);
-                                    reader.saveTimedMessage(timedMessage);
-
-                                    player.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
-                                    broadcastMessage("&6Игрок %s&6 стал главой гильдии %s&6!".formatted(pl.getName(), guild.displayName), -1, null);
-                                    player.closeInventory();
-                                }
-
-                                @Override
-                                protected @NotNull String[] getConfirmLore() {
-                                    return new String[] {"", "&aВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока %s?".formatted(pl.getName()), ""};
-                                }
-
-                                @Override
-                                protected void onCancel() {
-                                    TimedMessage timedMessage = messages.getFirst();
-                                    timedMessage.setStatus(EventStatusKey.READ);
-                                    reader.saveTimedMessage(timedMessage);
-                                    player.sendMessage(setColor("&aДействие отменено."));
-                                    player.closeInventory();
-                                }
-                            };
-                            Bukkit.getScheduler().runTask(GuildMaster.getPlugin(GuildMaster.class), () -> {
-                                player.closeInventory();
-                                player.openInventory(menu.getMenu());
-                            });
-                            return;
-                        }
+                    if (g.membersUUID.contains(pl.getUniqueId().toString()) && !g.id.equals(guild.id)) {
+                        timedMessage.setStatus(EventStatusKey.READ);
+                        reader.saveTimedMessage(timedMessage);
+                        player.sendMessage(setColor("&cДанный игрок уже состоит в другой гильдии."));
+                        return;
                     }
                 }
+                ConfirmMenu menu = new ConfirmMenu() {
+                    @Override
+                    protected void onConfirm() {
+                        String masterUUID = guild.getGuildMasterUUID();
+                        reader.writeGuild(guild.setGuildMasterUUID(pl.getUniqueId().toString()));
+
+                        TimedMessage timedMessage = messages.getFirst();
+                        reader.saveTimedMessage(timedMessage.setStatus(EventStatusKey.WAITING));
+
+                        if (!masterUUID.isEmpty()) {
+                            Player master = getPlayer(UUID.fromString(masterUUID));
+                            if (master != null && master.isOnline()) {
+                                master.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
+                            }
+                        }
+
+                        broadcastMessage("&6Игрок %s&6 стал главой гильдии %s&6!".formatted(pl.getName(), guild.displayName), -1, null);
+                        player.closeInventory();
+                    }
+
+                    @Override
+                    protected @NotNull String[] getConfirmLore() {
+                        return new String[] {"", "&aВы подтверждаете, что хотите установить в качестве нового главы гильдии игрока %s?".formatted(pl.getName()), ""};
+                    }
+
+                    @Override
+                    protected void onCancel() {
+                        TimedMessage timedMessage = messages.getFirst();
+                        timedMessage.setStatus(EventStatusKey.READ);
+                        reader.saveTimedMessage(timedMessage);
+                        player.sendMessage(setColor("&aДействие отменено."));
+                        player.closeInventory();
+                    }
+                };
+                Bukkit.getScheduler().runTask(GuildMaster.getPlugin(GuildMaster.class), () -> {
+                    player.closeInventory();
+                    player.openInventory(menu.getMenu());
+                });
+                return;
             }
         }
     }

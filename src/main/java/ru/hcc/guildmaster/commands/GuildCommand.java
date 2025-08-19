@@ -569,7 +569,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
         if (args.length == 1) {
             completions.addAll(Arrays.asList(COMMAND_VALUES));
         }
-        else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit"))) {
+        else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit") || args[0].equals("accept"))) {
             completions.addAll(reader.getGuildNames());
         }
         else for (Player player : Bukkit.getOnlinePlayers()) completions.add(player.getName());

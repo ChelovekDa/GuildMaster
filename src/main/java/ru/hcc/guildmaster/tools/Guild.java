@@ -83,6 +83,8 @@ public class Guild extends PermissionTools {
         else {
             if (this.membersUUID.size() < this.maxMembersCount || this.membersUUID.contains(guildMasterUUID)) {
                 this.guildMasterUUID = guildMasterUUID;
+                this.membersUUID.add(this.guildMasterUUID);
+
                 Player master = getPlayer(UUID.fromString(this.guildMasterUUID));
                 if (master != null) setGuildMasterPerms(master);
                 else this.guildMasterUUID = "";

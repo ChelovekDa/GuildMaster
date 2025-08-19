@@ -41,8 +41,10 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
             event.getWhoClicked().sendMessage(setColor("&cВ процессе выполнения возникла ошибка! Обратитесь к администратору!"));
             System.out.println(colorizeMessage("In proccess of running the code was appeared an error!", Color.RED_BACKGROUND));
             Bukkit.getLogger().log(Level.WARNING, "Error: message in GuildRequestMenu.java is the null source! ItemStack string: %s".formatted(Objects.requireNonNull(event.getCurrentItem()).toString()));
+            return;
         }
-        else {
+
+        if (message.eventNameKey.equals(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD)) {
             Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
             Player admin = (Player) event.getWhoClicked();
             Guild guild = Objects.requireNonNull(new Reader().getGuilds()).get(String.valueOf(message.customValues.get("guild")));
@@ -100,7 +102,30 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                     }
                 }
             };
-            event.getWhoClicked().openInventory(confirmMenu.getMenu());
+            admin.openInventory(confirmMenu.getMenu());
+        }
+        else {
+            Player admin = (Player) event.getWhoClicked();
+            ConfirmMenu menu = new ConfirmMenu() {
+                @Override
+                protected void onConfirm() {
+                    new Reader().saveTimedMessage(message.setStatus(EventStatusKey.READ));
+                    admin.closeInventory();
+                    admin.sendMessage(setColor("&aУведомление помечено как прочитанное!"));
+                }
+
+                @Override
+                protected @NotNull String[] getCancelLore() {
+                    return new String[] {"", "&aПометить это уведомление как прочитанное?", ""};
+                }
+
+                @Override
+                protected void onCancel() {
+                    new Reader().saveTimedMessage(message.setStatus(EventStatusKey.WAITING));
+                    admin.closeInventory();
+                }
+            };
+            admin.openInventory(menu.getMenu());
         }
     }
 
@@ -175,7 +200,13 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
     @Nullable
     private TimedMessage getMessage(HashMap<String, Object> additionalValues) {
-        Search search = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues);
+        Search search = null;
+
+        if (additionalValues.containsKey("action"))
+            search = new Search(EventNameKey.getById(Byte.parseByte(additionalValues.get("action").toString())), EventStatusKey.WAITING, additionalValues);
+        else
+            search = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues);
+
         try {
             return search.search().getFirst();
         } catch (Exception e) {
@@ -189,13 +220,18 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         assert lore != null;
 
         String nickname = removeHistory(lore.get(3).split(" ")[1]).replace(getRequestsColor(), "");
-        System.out.println(nickname);
         Player player = Bukkit.getPlayer(nickname);
         assert player != null;
 
         map.put("guild", removeHistory(lore.get(2).split(" ")[2]).replace(getRequestsColor(), ""));
         map.put("uuid", player.getUniqueId().toString());
 
+        String line = removeHistory(lore.get(1));
+        if (line.contains(getRequestsColor())) {
+            String[] lines = line.replaceAll(getRequestsColor(), "").split(": ");
+            System.out.println(lines[0]);
+            map.put("action", EventNameKey.getByMessage(lines[1]).getId());
+        }
         return map;
     }
 
