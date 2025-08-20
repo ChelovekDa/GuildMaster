@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.hcc.guildmaster.tools.PermissionTools;
 import ru.hcc.guildmaster.tools.Reader;
 import ru.hcc.guildmaster.tools.menus.GuildRequestsMenu;
+import ru.hcc.guildmaster.tools.menus.GuildTrackingMenu;
 import ru.hcc.guildmaster.tools.menus.patterns.ConfirmMenu;
 import ru.hcc.guildmaster.tools.timed.Search;
 import ru.hcc.guildmaster.tools.timed.TimedMessage;
@@ -21,13 +22,14 @@ import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.menus.GuildEditorMenu;
 import ru.hcc.guildmaster.tools.Guild;
 
+import java.io.File;
 import java.util.*;
 
 @SuppressWarnings("deprecation")
 public class GuildCommand extends PermissionTools implements CommandExecutor, TabCompleter {
 
     private final Reader reader = new Reader();
-    private static final String[] COMMAND_VALUES = new String[] {"create", "join", "menu", "accept", "deny", "leave", "kick", "track", "edit"};
+    private static final String[] COMMAND_VALUES = new String[] {"create", "join", "menu", "accept", "deny", "leave", "kick", "track", "edit", "info"};
 
     @Deprecated
     private void var1(boolean isConsole, @NotNull String @NotNull [] strings, @NotNull CommandSender sender) {
@@ -81,6 +83,12 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
     }
 
     private void track(@NotNull Player target, @NotNull Player admin) {
+
+        if (new File(reader.getTrackDataDir(admin.getUniqueId())).exists()) {
+            admin.openInventory(new GuildTrackingMenu().getMenu());
+            return;
+        }
+
         Reader reader = new Reader();
         if (!reader.saveData(admin)) {
             admin.sendMessage(setColor("&cНе удалось начать слежку, поскольку сохранение данных невозможно!"));
@@ -614,7 +622,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
         if (args.length == 1) {
             completions.addAll(Arrays.asList(COMMAND_VALUES));
         }
-        else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit") || args[0].equals("accept") || args[0].equals("deny"))) {
+        else if (args.length == 2 && (args[0].equals("join") || args[0].equals("menu") || args[0].equals("edit") || args[0].equals("accept"))) {
             completions.addAll(reader.getGuildNames());
         }
         else for (Player player : Bukkit.getOnlinePlayers()) completions.add(player.getName());

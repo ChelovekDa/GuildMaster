@@ -51,7 +51,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
             ConfirmMenu confirmMenu = new ConfirmMenu() {
                 @Override
                 protected void onConfirm() {
-                    if (admin.hasPermission("guildmaster.guild.accept")) {
+                    if (admin.hasPermission("guildmaster.guild.accept") || admin.hasPermission("guildmaster.*") || admin.isOp()) {
                         if (guild.maxMembersCount <= guild.membersUUID.size()) {
                             admin.closeInventory();
                             admin.sendMessage(setColor("&cНевозможно принять игрока в гильдию: нет свободных мест."));
@@ -162,9 +162,15 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         ItemStack itemStack = ItemStack.of(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta meta = itemStack.getItemMeta();
 
-        Player player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
+        Player player;
+        try {
+            player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
+        }
+        catch (IllegalArgumentException exception) {
+            player = null;
+        }
 
-        if (player == null) return null;
+        if (player == null && !message.eventNameKey.equals(EventNameKey.ATTEMPT_TO_RELOAD)) return null;
 
         meta.setDisplayName(setColor("&e%s".formatted(message.date)));
 
@@ -179,7 +185,25 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
             meta.setLore(List.of(setColors(ArrayToList(arrayList))));
         }
+        else if (message.eventNameKey.equals(EventNameKey.ATTEMPT_TO_RELOAD)) {
+            var res = String.valueOf(message.customValues.get("uuid"));
+            String name;
+            if (res != null && res.equals("ConsoleSender")) name = "&c&lКонсоль&f";
+            else {
+                assert player != null;
+                name = player.getName();
+            }
+
+            ArrayList<String> arrayList = convertToMenu(message.message);
+            arrayList.add(0, "");
+            arrayList.add(1, "&fДействие: %s%s".formatted(getRequestsColor(), message.eventNameKey.getMessage()));
+            arrayList.add(2, "&fАктивировал: %s%s".formatted(getRequestsColor(), name));
+            arrayList.add(3, "");
+
+            meta.setLore(List.of(setColors(ArrayToList(arrayList))));
+        }
         else {
+            assert player != null;
             ArrayList<String> arrayList = convertToMenu(message.message);
             arrayList.add(0, "");
             arrayList.add(1, "&fДействие: %s%s".formatted(getRequestsColor(), message.eventNameKey.getMessage()));
@@ -219,18 +243,26 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         HashMap<String, Object> map = new HashMap<>();
         assert lore != null;
 
-        String nickname = removeHistory(lore.get(3).split(" ")[1]).replace(getRequestsColor(), "");
-        Player player = Bukkit.getPlayer(nickname);
-        assert player != null;
+        String nickname;
+        Player player;
 
-        map.put("guild", removeHistory(lore.get(2).split(" ")[2]).replace(getRequestsColor(), ""));
-        map.put("uuid", player.getUniqueId().toString());
+        if (lore.size() == 5) {
+            nickname = removeHistory(lore.get(2).split(" ")[1]).replace(getRequestsColor(), "");
+            if (nickname.contains("§")) nickname = "ConsoleSender";
+            map.put("uuid", nickname);
+        }
+        else {
+            nickname = removeHistory(lore.get(3).split(" ")[1]).replace(getRequestsColor(), "");
+            player = Bukkit.getPlayer(nickname);
+            assert player != null;
+
+            map.put("guild", removeHistory(lore.get(2).split(" ")[2]).replace(getRequestsColor(), ""));
+            map.put("uuid", player.getUniqueId().toString());
+        }
 
         String line = removeHistory(lore.get(1));
         if (line.contains(getRequestsColor())) {
-            String[] lines = line.replaceAll(getRequestsColor(), "").split(": ");
-            System.out.println(lines[0]);
-            map.put("action", EventNameKey.getByMessage(lines[1]).getId());
+            map.put("action", EventNameKey.getByMessage(line.replaceAll(getRequestsColor(), "").split(": ")[1]).getId());
         }
         return map;
     }

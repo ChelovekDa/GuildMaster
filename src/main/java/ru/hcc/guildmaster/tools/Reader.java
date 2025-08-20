@@ -81,6 +81,11 @@ public class Reader extends PlayerTrackingLogger {
         }
     }
 
+    @Override
+    public @NotNull String getTrackDataDir(@NotNull UUID uuid) {
+        return super.getTrackDataDir(uuid);
+    }
+
     /**
      * This method needs to write changed guild's object
      * @param guild changed guild object
@@ -154,6 +159,11 @@ public class Reader extends PlayerTrackingLogger {
                             guild.membersUUID = uuids;
                         }
                         else guild.membersUUID = new HashSet<>();
+                    }
+
+                    else if (Objects.equals(key, "permissions")) {
+                        JSONArray array = (JSONArray) guild_object.get(key);
+                        if (!array.isEmpty()) for (Object value : array) guild.addPermission(String.valueOf(value));
                     }
                 }
 

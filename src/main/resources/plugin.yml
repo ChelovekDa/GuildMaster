@@ -1,5 +1,5 @@
 name: GuildMaster
-version: '0.1.8.5-beta'
+version: '0.1.9-beta'
 main: ru.hcc.guildmaster.GuildMaster
 api-version: '1.21'
 prefix: GuildMaster
@@ -9,6 +9,7 @@ website:
   'Discord: english_horoshiy'
 commands:
   guild: {}
+  guildmaster: {}
 permissions:
 
   guildmaster.*:

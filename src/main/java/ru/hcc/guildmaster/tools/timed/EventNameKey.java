@@ -14,7 +14,8 @@ public enum EventNameKey {
     GUILD_CHANGE_NAME(7, "В гильдии изменилось название"),
     GUILD_CHANGE_COUNT_MEMBERS(8, "В гильдии изменилось максимальное количество участников"),
     GUILD_DELETE(9, "Гильдия была удалена"),
-    OPEN_GUILD_EDITOR_MENU(10, "Open guild editor menu (Not sending to admins)");
+    OPEN_GUILD_EDITOR_MENU(10, "Open guild editor menu (Not sending to admins)"),
+    ATTEMPT_TO_RELOAD(11, "Перезагрузка плагина");
 
     private final int id;
     private final String message;

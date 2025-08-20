@@ -23,7 +23,7 @@ import java.util.logging.Level;
 
 class EventLogger extends ToolMethods {
 
-    private static final String TIMED_MESSAGES_FILE = "timed_messages.json";
+    private static final String TIMED_MESSAGES_FILE = "logs.json";
 
     /**
      * This method needs to read and get object of JSONObject guild's file.

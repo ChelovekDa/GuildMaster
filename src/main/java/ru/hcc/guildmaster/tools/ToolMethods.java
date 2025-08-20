@@ -159,7 +159,7 @@ public class ToolMethods {
      */
     @NotNull
     public static String getPath() {
-        return Objects.requireNonNull(Bukkit.getServer().getPluginManager().getPlugin(GuildMaster.NAME)).getDataFolder().getAbsolutePath();
+        return Objects.requireNonNull(Bukkit.getServer().getPluginManager().getPlugin(GuildMaster.getPlugin(GuildMaster.class).getName())).getDataFolder().getAbsolutePath();
     }
 
     /**

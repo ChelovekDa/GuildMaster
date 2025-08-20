@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -48,7 +49,8 @@ class PlayerTrackingLogger extends EventLogger {
         if (!Files.exists(Path.of(path))) new File(path).mkdirs();
     }
 
-    private static String getTrackDataDir(UUID uuid) {
+    @NotNull
+    public String getTrackDataDir(@NotNull UUID uuid) {
         return "%s/%s/%s.yml".formatted(getPath(), TRACK_DATA_DIR, uuid.toString());
     }
 
@@ -140,9 +142,11 @@ class PlayerTrackingLogger extends EventLogger {
 
         // Restoring extra slots
         int count = config.getKeys(false).size() - BASE_SLOTS_COUNT;
-        ItemStack[] extras = new ItemStack[count];
-        for (int i = 0; i < count; i++) extras[i] = config.getItemStack("extra." + i);
-        inventory.setExtraContents(extras);
+        if (count > 0) {
+            ItemStack[] extras = new ItemStack[count];
+            for (int i = 0; i < count; i++) extras[i] = config.getItemStack("extra." + i);
+            inventory.setExtraContents(extras);
+        }
 
         player.teleport(location);
 

@@ -19,53 +19,51 @@ import ru.hcc.guildmaster.tools.menus.patterns.ConfirmMenu;
 import java.util.List;
 import java.util.logging.Level;
 
+@SuppressWarnings("deprecation")
 public class GuildTrackingMenu extends ToolMethods implements Menu {
 
     @EventHandler
     public void onPlayerInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) {
-            event.setCancelled(true);
-            ItemStack stack = event.getCurrentItem();
-            if (stack == null) return;
+        if (!event.getView().getTitle().equalsIgnoreCase(getMenuTitle())) return;
+        event.setCancelled(true);
+        ItemStack stack = event.getCurrentItem();
+        if (stack == null) return;
 
-            Player player = (Player) event.getWhoClicked();
+        Player player = (Player) event.getWhoClicked();
 
-            if (!player.hasPermission("guildmaster.guild.track")) player.sendMessage(getErrorPermissionMessage());
+        if (!player.hasPermission("guildmaster.guild.track") || player.isOp() || player.hasPermission("guildmaster.*")) player.sendMessage(getErrorPermissionMessage());
 
-            if (stack.equals(getLeaveButton())) {
-                ConfirmMenu menu = new ConfirmMenu() {
-                    @SuppressWarnings("deprecation")
-                    @Override
-                    protected void onConfirm() {
-                        Reader reader = new Reader();
-                        if (!reader.restoreData(player)) {
-                            player.sendMessage(setColor("&cОшибка восстановления данных! Обратитесь к администратору за помощью!"));
-                            System.out.println(colorizeMessage("Error tracking data restore!", Color.RED_BACKGROUND_BRIGHT));
-                            Bukkit.getLogger().log(Level.WARNING, "Error tracking data restore!");
-                            return;
-                        }
-
-                        player.setInvisible(false);
-                        player.setInvulnerable(false);
-                        player.setAllowFlight(false);
-                        player.setCanPickupItems(true);
-                        player.setCollidable(true);
-
-                        Bukkit.getLogger().log(Level.INFO, "Player %s left the tracking mode.".formatted(player.getDisplayName()));
-                        player.sendMessage(setColor("&aВы вышли из режима слежки!"));
-                        player.closeInventory();
-
+        if (stack.equals(getLeaveButton())) {
+            ConfirmMenu menu = new ConfirmMenu() {
+                @Override
+                protected void onConfirm() {
+                    Reader reader = new Reader();
+                    if (!reader.restoreData(player)) {
+                        player.sendMessage(setColor("&cОшибка восстановления данных! Обратитесь к администратору за помощью!"));
+                        Bukkit.getLogger().log(Level.WARNING, colorizeMessage("Error tracking data restore!", Color.RED_BACKGROUND_BRIGHT));
+                        return;
                     }
 
-                    @Override
-                    protected void onCancel() {
-                        player.closeInventory();
-                        player.openInventory(new GuildTrackingMenu().getMenu());
-                    }
-                };
-                player.closeInventory();
-                player.openInventory(menu.getMenu());
-            }
+                    player.setInvisible(false);
+                    player.setInvulnerable(false);
+                    player.setAllowFlight(false);
+                    player.setCanPickupItems(true);
+                    player.setCollidable(true);
+
+                    Bukkit.getLogger().log(Level.INFO, "Player %s left the tracking mode.".formatted(player.getName()));
+                    player.sendMessage(setColor("&aВы вышли из режима слежки!"));
+                    player.closeInventory();
+
+                }
+
+                @Override
+                protected void onCancel() {
+                    player.closeInventory();
+                    player.openInventory(new GuildTrackingMenu().getMenu());
+                }
+            };
+            player.closeInventory();
+            player.openInventory(menu.getMenu());
         }
     }
 

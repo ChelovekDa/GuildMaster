@@ -43,4 +43,21 @@ public class Eventer extends ToolMethods implements Listener {
         }
     }
 
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        var guilds = new Reader().getGuilds();
+        if (guilds == null) return;
+
+        for (String id : guilds.keySet()) {
+            Guild guild = guilds.get(id);
+            if (guild.membersUUID.contains(player.getUniqueId().toString())) {
+                guild.setPerms(player);
+                return;
+            }
+        }
+
+    }
+
 }

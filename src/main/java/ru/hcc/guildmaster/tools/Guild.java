@@ -1,12 +1,12 @@
 package ru.hcc.guildmaster.tools;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
 import ru.hcc.guildmaster.tools.timed.Search;
-
 import java.util.*;
 
 public class Guild extends PermissionTools {
@@ -16,7 +16,7 @@ public class Guild extends PermissionTools {
     public byte maxMembersCount;
     public HashSet<String> membersUUID;
     private String guildMasterUUID;
-    private ArrayList<String> guildPermissions;
+    private final HashSet<String> guildPermissions;
 
     public Guild(String id, @Nullable HashSet<String> membersUUID, String guildMasterUUID) {
         this.displayName = id;
@@ -28,7 +28,7 @@ public class Guild extends PermissionTools {
 
         if (!Objects.equals(guildMasterUUID.replaceAll(" ", ""), "")) this.membersUUID.add(guildMasterUUID);
         this.guildMasterUUID = guildMasterUUID;
-        this.guildPermissions = new ArrayList<>();
+        this.guildPermissions = new HashSet<>();
     }
 
     public boolean contains(@NotNull String uuid) {
@@ -37,10 +37,13 @@ public class Guild extends PermissionTools {
         return false;
     }
 
-    @NotNull
-    public Guild addPermission(String permission) {
-        if (!guildPermissions.contains(permission)) guildPermissions.add(permission);
-        return this;
+    public void addPermission(String permission) {
+        this.guildPermissions.add(permission);
+    }
+
+    public void setPerms(Player player) {
+        if (this.guildPermissions.isEmpty()) return;
+        for (String perm : this.guildPermissions) setPermission(perm, player);
     }
 
     @NotNull
@@ -142,6 +145,7 @@ public class Guild extends PermissionTools {
         map.put("maxMembersCount", this.maxMembersCount);
         map.put("guildMasterUUID", this.guildMasterUUID);
         map.put("membersUUID", new ArrayList<>(this.membersUUID));
+        map.put("permissions", new ArrayList<>(this.guildPermissions));
 
         return map;
     }
