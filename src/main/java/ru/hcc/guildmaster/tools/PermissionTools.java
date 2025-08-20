@@ -5,6 +5,8 @@ import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.logging.Level;
+
 /**
  * This class needs to comfortable work with plugin's permissions.
  */
@@ -24,8 +26,7 @@ public class PermissionTools extends ToolMethods {
         LuckPerms luckPerms = Bukkit.getServicesManager().load(LuckPerms.class);
         if (luckPerms != null) luckPerms.getUserManager().modifyUser(player.getUniqueId(),
                 user -> user.data().remove(Node.builder(perm).build()));
-        else
-            System.out.println(colorizeMessage("Permission '%s' can't be cleared on %s player because LuckPerms API returned a null source!".formatted(perm, player.getName()), Color.RED));
+        else log(Level.WARNING, colorizeMessage("Permission '%s' can't be cleared on %s player because LuckPerms API returned a null source!".formatted(perm, player.getName()), Color.RED));
     }
 
     public void setPermission(String perm, Player player) {
@@ -33,7 +34,8 @@ public class PermissionTools extends ToolMethods {
         LuckPerms luckPerms = Bukkit.getServicesManager().load(LuckPerms.class);
         if (luckPerms != null) luckPerms.getUserManager().modifyUser(player.getUniqueId(),
                 user -> user.data().add(Node.builder(perm).build()));
-        else System.out.println(colorizeMessage("Permission '%s' can't be setting on %s player because LuckPerms API returned a null source!".formatted(perm, player.getName()), Color.RED));
+        else log(Level.WARNING, colorizeMessage("Permission '%s' can't be cleared on %s player because LuckPerms API returned a null source!".formatted(perm, player.getName()), Color.RED));
+
     }
 
     protected void removeGuildMasterPerms(Player player) {

@@ -25,6 +25,7 @@ import ru.hcc.guildmaster.tools.timed.Search;
 import ru.hcc.guildmaster.tools.timed.TimedMessage;
 
 import java.util.*;
+import java.util.logging.Level;
 
 @SuppressWarnings("deprecation")
 public class GuildEditorMenu extends ToolMethods implements Menu {
@@ -54,14 +55,14 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         try {
             newCount = Byte.parseByte(mes);
         } catch (Exception e) {
-            System.out.println(colorizeMessage("Can't setting new members count in guild '%s' because was appeared an error:\n%s".formatted(guild.id, e.getMessage()), Color.RED));
+            log(Level.INFO, colorizeMessage("Can't setting new members count in guild '%s' because was appeared an error:\n%s".formatted(guild.id, e.getMessage()), Color.RED));
             player.sendMessage(setColor("&cНе удалось получить числовое значение с диапазоне между 1 и 127."));
             return;
         }
 
         if (guild.membersUUID.size() > newCount) {
             player.sendMessage(setColor("&cНевозможно установить такое количество участников, поскольку в гильдии состоит больше людей, чем вы хотите!"));
-            System.out.println(colorizeMessage("Can't setting new count of members in guild '%s' because now count of members more than need to set.".formatted(guild.id), Color.RED));
+            log(Level.INFO, colorizeMessage("Can't setting new count of members in guild '%s' because now count of members more than need to set.".formatted(guild.id), Color.RED));
             return;
         }
 
@@ -227,7 +228,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         if (idItem == null) {
             player.closeInventory();
             player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
-            System.out.println(colorizeMessage("Can't get guild id.", Color.RED));
+            log(Level.WARNING, colorizeMessage("Editor null source!", Color.RED));
             return;
         }
 
@@ -235,7 +236,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         if (!Objects.requireNonNull(reader.getGuildNames()).contains(id)) {
             player.closeInventory();
             player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
-            System.out.println(colorizeMessage("Can't get guild id.", Color.RED));
+            log(Level.WARNING, colorizeMessage("Editor null source!", Color.RED));
             return;
         }
 
@@ -249,7 +250,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         if (guild == null) {
             player.closeInventory();
             player.sendMessage(setColor("&cОшибка! Обратитесь к администратору!"));
-            System.out.println(colorizeMessage("Can't get guild because source is null.", Color.RED));
+            log(Level.WARNING, colorizeMessage("Editor null source!", Color.RED));
             return;
         }
 

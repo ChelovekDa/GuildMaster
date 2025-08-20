@@ -39,8 +39,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         TimedMessage message = getMessage(getAdditionalValues(currentItem));
         if (message == null) {
             event.getWhoClicked().sendMessage(setColor("&cВ процессе выполнения возникла ошибка! Обратитесь к администратору!"));
-            System.out.println(colorizeMessage("In proccess of running the code was appeared an error!", Color.RED_BACKGROUND));
-            Bukkit.getLogger().log(Level.WARNING, "Error: message in GuildRequestMenu.java is the null source! ItemStack string: %s".formatted(Objects.requireNonNull(event.getCurrentItem()).toString()));
+            log(Level.WARNING, colorizeMessage("Request null source!", Color.RED_BACKGROUND));
             return;
         }
 
@@ -56,7 +55,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                             admin.closeInventory();
                             admin.sendMessage(setColor("&cНевозможно принять игрока в гильдию: нет свободных мест."));
                             assert player != null;
-                            System.out.println(colorizeMessage("Player %s can't be join to guild '%s' because it's no have empty slots!".formatted(player.getName(), guild.id), Color.RED));
+                            log(Level.WARNING, colorizeMessage("Player %s can't be join to guild '%s' because it's no have empty slots!".formatted(player.getName(), guild.id), Color.RED));
                             new Reader().saveTimedMessage(message.setStatus(EventStatusKey.READ));
                         }
                         else {
@@ -224,12 +223,17 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
     @Nullable
     private TimedMessage getMessage(HashMap<String, Object> additionalValues) {
-        Search search = null;
+        Search search;
 
-        if (additionalValues.containsKey("action"))
-            search = new Search(EventNameKey.getById(Byte.parseByte(additionalValues.get("action").toString())), EventStatusKey.WAITING, additionalValues);
-        else
+        if (additionalValues.containsKey("action")) {
+            EventNameKey key = EventNameKey.getById(Integer.parseInt(additionalValues.get("action").toString()));
+            additionalValues.remove("action");
+
+            search = new Search(key, EventStatusKey.WAITING, additionalValues);
+        }
+        else {
             search = new Search(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD, EventStatusKey.WAITING, additionalValues);
+        }
 
         try {
             return search.search().getFirst();
@@ -248,7 +252,12 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
 
         if (lore.size() == 5) {
             nickname = removeHistory(lore.get(2).split(" ")[1]).replace(getRequestsColor(), "");
-            if (nickname.contains("§")) nickname = "ConsoleSender";
+            if (nickname.contains("&")) nickname = "ConsoleSender";
+            else {
+                player = Bukkit.getPlayer(nickname);
+                assert player != null;
+                nickname = player.getUniqueId().toString();
+            }
             map.put("uuid", nickname);
         }
         else {

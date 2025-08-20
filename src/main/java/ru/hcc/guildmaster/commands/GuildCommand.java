@@ -2,10 +2,7 @@ package ru.hcc.guildmaster.commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +21,7 @@ import ru.hcc.guildmaster.tools.Guild;
 
 import java.io.File;
 import java.util.*;
+import java.util.logging.Level;
 
 @SuppressWarnings("deprecation")
 public class GuildCommand extends PermissionTools implements CommandExecutor, TabCompleter {
@@ -44,8 +42,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     var timedMessages = search.search();
 
                     if (timedMessages.isEmpty()) {
-                        if (isConsole) System.out.println(colorizeMessage("Not found active requests in this guild!", Color.RED));
-                        else sender.sendMessage(setColor("&cВ этой гильдии не найдено ни одной активной заявки!"));
+                        sender.sendMessage(setColor("&cВ этой гильдии не найдено ни одной активной заявки!"));
                         return;
                     }
 
@@ -142,7 +139,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                         String message = setColor("&aГильдия &a&o%s&a успешно создана!".formatted(guild.id));
                         sender.sendMessage(message);
-                        System.out.println(colorizeMessage("Success creating new guild '%s'.".formatted(guild.id), Color.GREEN));
+                        log(Level.INFO, colorizeMessage("Success creating new guild '%s'.".formatted(guild.id), Color.GREEN));
 
                         if (sender.hasPermission("guildmaster.guild.edit") || sender.hasPermission("guildmaster.*") || sender.isOp()) {
 
@@ -382,7 +379,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                 }
                 else sender.sendMessage(getErrorPermissionMessage());
             }
-            else System.out.println(colorizeMessage("This function currently not working!", Color.RED));
         }
         else if (strings[0].equals("leave")) {
             if (sender instanceof Player) {
@@ -434,7 +430,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     for (String id : guilds.keySet()) {
                         Guild guild = guilds.get(id);
                         for (String uuid : guild.membersUUID) {
-                            System.out.println(uuid);
                             Player player = getPlayer(UUID.fromString(uuid));
                             assert player != null;
                             if (player.getName().equals(strings[1])) {

@@ -100,7 +100,7 @@ class PlayerTrackingLogger extends EventLogger {
             return true;
         } catch (IOException e) {
             Bukkit.getLogger().log(Level.WARNING, "Can't save inventory content!");
-            System.out.println(colorizeMessage("Plugin can't save player's inventory content because:\n%s".formatted(e.getMessage()), Color.RED_BACKGROUND));
+            log(Level.WARNING, colorizeMessage("Plugin can't save player's inventory content because:\n%s".formatted(e.getMessage()), Color.RED_BACKGROUND));
             return false;
         }
     }

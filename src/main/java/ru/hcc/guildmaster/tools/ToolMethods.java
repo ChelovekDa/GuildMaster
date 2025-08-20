@@ -11,6 +11,7 @@ import ru.hcc.guildmaster.GuildMaster;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ToolMethods {
 
@@ -26,6 +27,16 @@ public class ToolMethods {
 
     public static String getHelpMessage() {
         return "&a&lGuildMaster&a plugin for Minecraft version &a&l1.21.8&a\n&6Created by &6&lHCC&6 (Home Creator Companiy)\n&aActually version of plugin: &a&l%s&f".formatted(GuildMaster.getPlugin(GuildMaster.class).getDescription().getVersion());
+    }
+
+    /**
+     * This method need to logging some messages in console by the plugin name
+     * @param message message what you can log (it can be colourful)
+     * @param level level of message
+     * @see #colorizeMessage(String, Color)
+     */
+    public static void log(Level level, String message) {
+        GuildMaster.getPlugin(GuildMaster.class).getLogger().log(level, message);
     }
 
     /**
