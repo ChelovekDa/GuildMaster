@@ -31,40 +31,43 @@ public class GuildTrackingMenu extends ToolMethods implements Menu {
 
         Player player = (Player) event.getWhoClicked();
 
-        if (!player.hasPermission("guildmaster.guild.track") || player.isOp() || player.hasPermission("guildmaster.*")) player.sendMessage(getErrorPermissionMessage());
+        if (player.hasPermission("guildmaster.guild.track") || player.isOp() || player.hasPermission("guildmaster.*")) {
+            if (stack.equals(getLeaveButton())) {
+                ConfirmMenu menu = new ConfirmMenu() {
+                    @Override
+                    protected void onConfirm() {
+                        Reader reader = new Reader();
+                        if (!reader.restoreData(player)) {
+                            player.sendMessage(setColor("&cОшибка восстановления данных! Обратитесь к администратору за помощью!"));
+                            Bukkit.getLogger().log(Level.WARNING, colorizeMessage("Error tracking data restore!", Color.RED_BACKGROUND_BRIGHT));
+                            return;
+                        }
 
-        if (stack.equals(getLeaveButton())) {
-            ConfirmMenu menu = new ConfirmMenu() {
-                @Override
-                protected void onConfirm() {
-                    Reader reader = new Reader();
-                    if (!reader.restoreData(player)) {
-                        player.sendMessage(setColor("&cОшибка восстановления данных! Обратитесь к администратору за помощью!"));
-                        Bukkit.getLogger().log(Level.WARNING, colorizeMessage("Error tracking data restore!", Color.RED_BACKGROUND_BRIGHT));
-                        return;
+                        player.setInvisible(false);
+                        player.setInvulnerable(false);
+                        player.setAllowFlight(false);
+                        player.setCanPickupItems(true);
+                        player.setCollidable(true);
+                        player.setSilent(false);
+                        player.setSleepingIgnored(false);
+
+                        Bukkit.getLogger().log(Level.INFO, "Player %s left the tracking mode.".formatted(player.getName()));
+                        player.sendMessage(setColor("&aВы вышли из режима слежки!"));
+                        player.closeInventory();
+
                     }
 
-                    player.setInvisible(false);
-                    player.setInvulnerable(false);
-                    player.setAllowFlight(false);
-                    player.setCanPickupItems(true);
-                    player.setCollidable(true);
-
-                    Bukkit.getLogger().log(Level.INFO, "Player %s left the tracking mode.".formatted(player.getName()));
-                    player.sendMessage(setColor("&aВы вышли из режима слежки!"));
-                    player.closeInventory();
-
-                }
-
-                @Override
-                protected void onCancel() {
-                    player.closeInventory();
-                    player.openInventory(new GuildTrackingMenu().getMenu());
-                }
-            };
-            player.closeInventory();
-            player.openInventory(menu.getMenu());
+                    @Override
+                    protected void onCancel() {
+                        player.closeInventory();
+                        player.openInventory(new GuildTrackingMenu().getMenu());
+                    }
+                };
+                player.closeInventory();
+                player.openInventory(menu.getMenu());
+            }
         }
+        else player.sendMessage(errorPermission());
     }
 
     @NotNull

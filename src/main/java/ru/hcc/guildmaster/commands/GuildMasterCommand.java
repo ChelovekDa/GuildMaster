@@ -44,12 +44,8 @@ public class GuildMasterCommand extends ToolMethods implements CommandExecutor, 
                 }
             }
             if (pl != null && other != null) {
-                Bukkit.getScheduler().runTaskLater(other, () -> {
-                    pluginManager.disablePlugin(pl);
-                }, 30L);
-                Bukkit.getScheduler().runTaskLater(other, () -> {
-                    pluginManager.enablePlugin(pl);
-                }, 80L);
+                Bukkit.getScheduler().runTaskLater(other, () -> pluginManager.disablePlugin(pl), 30L);
+                Bukkit.getScheduler().runTaskLater(other, () -> pluginManager.enablePlugin(pl), 80L);
             }
             else message = "&cПерезагрузка невозможна: ошибка назначения вспомогательных интерфейсов!";
         }
@@ -64,7 +60,7 @@ public class GuildMasterCommand extends ToolMethods implements CommandExecutor, 
         else if (args[0].equals("reload")) {
             if (sender instanceof Player) {
                 if (!sender.isOp()) {
-                    sender.sendMessage(getErrorPermissionMessage());
+                    sender.sendMessage(errorPermission());
                     return false;
                 }
 
@@ -110,7 +106,6 @@ public class GuildMasterCommand extends ToolMethods implements CommandExecutor, 
                 TimedMessage message = new TimedMessage(EventNameKey.ATTEMPT_TO_RELOAD, EventStatusKey.NOTHING, EventNameKey.ATTEMPT_TO_RELOAD.getMessage(), additionalValues);
                 reader.saveTimedMessage(message);
 
-                ConsoleCommandSender commandSender = (ConsoleCommandSender) sender;
                 sender.sendMessage(setColor("&6Все операторы будут уведомлены, когда плагин будет снова функционировать."));
                 sender.sendMessage(setColor("&cПерезагрузка плагина.."));
 

@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
@@ -57,6 +58,10 @@ public class Eventer extends ToolMethods implements Listener {
                 return;
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
 
     }
 

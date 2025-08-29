@@ -1,15 +1,16 @@
 name: GuildMaster
-version: '0.1.9.1-beta'
+version: '0.2-beta'
 main: ru.hcc.guildmaster.GuildMaster
 api-version: '1.21'
 prefix: GuildMaster
 author: English (aka Horoshiy)
 description: Plugin for guilds
+softdepend: [ LuckPerms, ProtocolLib ]
 website:
   'Discord: english_horoshiy'
 commands:
-  guild: {}
-  guildmaster: {}
+  guild: { }
+  guildmaster: { }
 permissions:
 
   guildmaster.*:
@@ -28,6 +29,10 @@ permissions:
 
   guildmaster.guild.create:
     description: Allow to create guild
+    default: op
+
+  guildmaster.guild.create.wgm:
+    description: Allow to create guild without guild master
     default: op
 
   guildmaster.guild.menu:

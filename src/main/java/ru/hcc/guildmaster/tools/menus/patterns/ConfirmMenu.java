@@ -21,6 +21,7 @@ import java.util.List;
  * This class need to confirm or cancel something actions.
  * It's basic menu-class for needs other menus.
  */
+@SuppressWarnings("deprecation")
 public abstract class ConfirmMenu extends ToolMethods implements Menu {
 
     public ConfirmMenu() {

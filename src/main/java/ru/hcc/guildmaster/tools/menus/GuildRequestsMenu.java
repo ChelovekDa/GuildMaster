@@ -25,6 +25,7 @@ import ru.hcc.guildmaster.tools.timed.TimedMessage;
 import java.util.*;
 import java.util.logging.Level;
 
+@SuppressWarnings("deprecation")
 public class GuildRequestsMenu extends ToolMethods implements Menu {
 
     @EventHandler
@@ -70,7 +71,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                     }
                     else {
                         admin.closeInventory();
-                        admin.sendMessage(getErrorPermissionMessage());
+                        admin.sendMessage(errorPermission());
                     }
                 }
 
@@ -97,7 +98,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
                     }
                     else {
                         admin.closeInventory();
-                        admin.sendMessage(getErrorPermissionMessage());
+                        admin.sendMessage(errorPermission());
                     }
                 }
             };
@@ -174,6 +175,7 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         meta.setDisplayName(setColor("&e%s".formatted(message.date)));
 
         if (message.eventNameKey.equals(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD)) {
+            assert player != null;
             ArrayList<String> arrayList = convertToMenu(message.message);
             arrayList.add(0, "");
             arrayList.add(1, "&fЗаявка на вступление в гильдию:");

@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import java.util.Date;
 import java.util.HashMap;
 
+@SuppressWarnings("unchecked")
 public class TimedMessage {
 
     public String date;

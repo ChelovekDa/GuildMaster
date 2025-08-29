@@ -3,6 +3,8 @@ package ru.hcc.guildmaster.tools;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +15,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
+@SuppressWarnings("deprecation")
 public class ToolMethods {
 
     private static final int MAX_LINE_LENGTH = 125;
@@ -30,6 +33,32 @@ public class ToolMethods {
     }
 
     /**
+     * This method needs to check if sender has some permission.
+     * If CommandSender is Player result will be creating after checking all permissions.
+     * If CommandSender is Console result is true.
+     * @param perm Permission
+     * @param sender CommandSender
+     * @return Result after checking
+     */
+    public static boolean hasPerm(String perm, CommandSender sender) {
+        boolean result = false;
+        if (sender instanceof Player){
+            if (perm.isEmpty()) result = true;
+            else result = sender.hasPermission(perm) || isOp((Player) sender);
+        }
+        else if (sender instanceof ConsoleCommandSender) result = true;
+        return result;
+    }
+
+    public static String unknownCommand() {
+        return setColor("&cТакой команды не существует!");
+    }
+
+    public static boolean isOp(Player player) {
+        return player.isOp() || player.hasPermission("guildmaster.*");
+    }
+
+    /**
      * This method need to logging some messages in console by the plugin name
      * @param message message what you can log (it can be colourful)
      * @param level level of message
@@ -41,7 +70,6 @@ public class ToolMethods {
 
     /**
      * This method needs to colorize the console message.
-     *
      * For example: if you can print an error message that it must be red color, right?
      * Use Color enum for give the red color and printing a done message to console!
      *
@@ -89,8 +117,8 @@ public class ToolMethods {
 
     /**
      * This method needs to convert ArrayList<String> object to String[]
-     * @param arrayList
-     * @return List with strings
+     * @param arrayList ArrayList
+     * @return String[]
      */
     public static String[] ArrayToList(ArrayList<String> arrayList) {
         String[] strings = new String[arrayList.size()];
@@ -130,37 +158,37 @@ public class ToolMethods {
      */
     @NotNull
     public static String getColorsHelpMessage() {
-        StringBuilder builder = new StringBuilder();
         // colors
-        builder.append("\n");
-        builder.append(var1(new String[] {"b", "Aqua"}));
-        builder.append(var1(new String[] {"9", "Blue"}));
-        builder.append(var1(new String[] {"8", "Dark Gray"}));
-        builder.append(var1(new String[] {"2", "Dark Green"}));
-        builder.append(var1(new String[] {"6", "Gold"}));
-        builder.append(var1(new String[] {"a", "Green"}));
-        builder.append(var1(new String[] {"c", "Red"}));
-        builder.append(var1(new String[] {"e", "Yellow"}));
-        builder.append(var1(new String[] {"0", "Black"}));
-        builder.append(var1(new String[] {"3", "Dark Aqua"}));
-        builder.append(var1(new String[] {"1", "Dark Blue"}));
-        builder.append(var1(new String[] {"5", "Dark Purple"}));
-        builder.append(var1(new String[] {"4", "Dark Red"}));
-        builder.append(var1(new String[] {"7", "Gray"}));
-        builder.append(var1(new String[] {"d", "Light Purple"}));
-        builder.append(var1(new String[] {"f", "White"}));
 
-        // fonts
-        builder.append("\n");
-        builder.append(var1(new String[] {"l", "Bold"}));
-        builder.append(var1(new String[] {"n", "Underline"}));
-        builder.append(var1(new String[] {"o", "Italic"}));
-        builder.append(var1(new String[] {"k", "Random"}));
-        builder.append(var1(new String[] {"m", "strikethrough"}));
-        return setColor(builder.toString());
+        String builder = "\n" +
+                var1(new String[]{"b", "Aqua"}) +
+                var1(new String[]{"9", "Blue"}) +
+                var1(new String[]{"8", "Dark Gray"}) +
+                var1(new String[]{"2", "Dark Green"}) +
+                var1(new String[]{"6", "Gold"}) +
+                var1(new String[]{"a", "Green"}) +
+                var1(new String[]{"c", "Red"}) +
+                var1(new String[]{"e", "Yellow"}) +
+                var1(new String[]{"0", "Black"}) +
+                var1(new String[]{"3", "Dark Aqua"}) +
+                var1(new String[]{"1", "Dark Blue"}) +
+                var1(new String[]{"5", "Dark Purple"}) +
+                var1(new String[]{"4", "Dark Red"}) +
+                var1(new String[]{"7", "Gray"}) +
+                var1(new String[]{"d", "Light Purple"}) +
+                var1(new String[]{"f", "White"}) +
+
+                // fonts
+                "\n" +
+                var1(new String[]{"l", "Bold"}) +
+                var1(new String[]{"n", "Underline"}) +
+                var1(new String[]{"o", "Italic"}) +
+                var1(new String[]{"k", "Random"}) +
+                var1(new String[]{"m", "strikethrough"});
+        return setColor(builder);
     }
 
-    public static String getErrorPermissionMessage() {
+    public static String errorPermission() {
         return setColor("&cВы не имеете разрешения для использования данной команды!");
     }
 

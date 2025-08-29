@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'ru.hcc'
-version = '0.1.9.1-beta'
+version = '0.2-beta'
 
 repositories {
     mavenCentral()
@@ -21,6 +21,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("net.luckperms:api:5.5")
+    compileOnly("com.comphenix.protocol:ProtocolLib:5.4.0")
     implementation("com.googlecode.json-simple:json-simple:1.1.1")
 }
 

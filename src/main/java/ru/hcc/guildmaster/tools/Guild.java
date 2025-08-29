@@ -1,6 +1,5 @@
 package ru.hcc.guildmaster.tools;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +17,7 @@ public class Guild extends PermissionTools {
     private String guildMasterUUID;
     private final HashSet<String> guildPermissions;
 
-    public Guild(String id, @Nullable HashSet<String> membersUUID, String guildMasterUUID) {
+    public Guild(String id, @Nullable HashSet<String> membersUUID, @Nullable String guildMasterUUID) {
         this.displayName = id;
         this.id = id;
         this.maxMembersCount = Byte.MAX_VALUE;
@@ -26,8 +25,8 @@ public class Guild extends PermissionTools {
         if (membersUUID == null) this.membersUUID = new HashSet<>();
         else this.membersUUID = membersUUID;
 
-        if (!Objects.equals(guildMasterUUID.replaceAll(" ", ""), "")) this.membersUUID.add(guildMasterUUID);
-        this.guildMasterUUID = guildMasterUUID;
+        if (guildMasterUUID != null && !Objects.equals(guildMasterUUID.replaceAll(" ", ""), "")) this.membersUUID.add(guildMasterUUID);
+        this.setGuildMasterUUID(guildMasterUUID);
         this.guildPermissions = new HashSet<>();
     }
 
@@ -126,14 +125,12 @@ public class Guild extends PermissionTools {
         return "&6Информация о гильдии:\n&6- Название: %s&6\n&6- Айди: %s\n&6- Глава гильдии: %s\n&6- Количество участников: %s".formatted(this.displayName, this.id, this.getGuildMasterName(), this.membersUUID.size());
     }
 
-    @NotNull
-    public Guild addMember(Player player) {
+    public void addMember(Player player) {
         this.membersUUID.add(player.getUniqueId().toString());
         new Reader().writeGuild(this);
 
         for (String permission : this.guildPermissions) setPermission(permission, player);
 
-        return this;
     }
 
     @NotNull

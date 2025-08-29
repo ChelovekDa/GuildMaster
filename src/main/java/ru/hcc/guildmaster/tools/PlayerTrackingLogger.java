@@ -23,6 +23,7 @@ import java.util.logging.Level;
  * This class need to saving and restore from file spy-data.
  * It's'include the latest player coordinates, inventory storage and other.
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 class PlayerTrackingLogger extends EventLogger {
 
     private static final String TRACK_DATA_DIR = "tracking";
@@ -111,7 +112,7 @@ class PlayerTrackingLogger extends EventLogger {
      * Warning: previous inventory content will be deleted
      * 
      * @see #saveData(Player)  
-     * @param player
+     * @param player player
      */
     public boolean restoreData(Player player) {
         File file = new File(getTrackDataDir(player.getUniqueId()));

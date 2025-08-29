@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class Reader extends PlayerTrackingLogger {
 
     private static final String GUILDS_FILE_NAME = "guilds.json";
@@ -66,7 +67,7 @@ public class Reader extends PlayerTrackingLogger {
         HashMap<String, Guild> guildsHashMap = getGuilds();
 
         if (guildsHashMap != null) {
-            for (String guildId : ((HashMap<String, Guild>) guildsHashMap.clone()).keySet()) {
+            for (String guildId : guildsHashMap.keySet()) {
                 if (guildId.equals(guild.id)) guildsHashMap.remove(guildId);
             }
         }
@@ -126,7 +127,7 @@ public class Reader extends PlayerTrackingLogger {
      * @see #writeGuild(Guild)
      * @see #GUILDS_FILE_NAME
      */
-    @Nullable
+    @NotNull
     public HashMap<String, Guild> getGuilds() {
         JSONObject jsonObject = readFile(GUILDS_FILE_NAME);
 
@@ -170,7 +171,6 @@ public class Reader extends PlayerTrackingLogger {
                 map.put(guild.id, guild);
             }
         }
-        else map = null;
 
         return map;
     }
