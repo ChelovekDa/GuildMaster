@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
 import ru.hcc.guildmaster.tools.timed.EventStatusKey;
@@ -21,14 +20,14 @@ public class Eventer extends ToolMethods implements Listener {
     public void onGuildMasterJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        if (player.isOp() || player.hasPermission("guildmaster.*")) {
-            var timedMessages = new Search(null, null).search();
+        if (isOp(player)) {
+            ArrayList<TimedMessage> timedMessages = new Search(null, null).search();
             if (!timedMessages.isEmpty())
                 player.sendMessage(setColor("&6Есть непрочитанные уведомления (&6%s&6).".formatted(String.valueOf(timedMessages.size()))));
         }
         else {
-            var guilds = new Reader().getGuilds();
-            if (guilds != null) {
+            HashMap<String, Guild> guilds = new Reader().getGuilds();
+            if (!guilds.isEmpty()) {
                 for (String id : guilds.keySet()) {
                     Guild guild = guilds.get(id);
                     if (guild.getGuildMasterUUID().equals(event.getPlayer().getUniqueId().toString())) {
@@ -48,21 +47,16 @@ public class Eventer extends ToolMethods implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        var guilds = new Reader().getGuilds();
-        if (guilds == null) return;
+        HashMap<String, Guild> guilds = new Reader().getGuilds();
+        if (guilds.isEmpty()) return;
 
         for (String id : guilds.keySet()) {
             Guild guild = guilds.get(id);
             if (guild.membersUUID.contains(player.getUniqueId().toString())) {
-                guild.setPerms(player);
+                guild.setPerms(player.getUniqueId());
                 return;
             }
         }
-    }
-
-    @EventHandler
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
-
     }
 
 }

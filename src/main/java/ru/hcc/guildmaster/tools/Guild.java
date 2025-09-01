@@ -1,5 +1,6 @@
 package ru.hcc.guildmaster.tools;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +27,7 @@ public class Guild extends PermissionTools {
         else this.membersUUID = membersUUID;
 
         if (guildMasterUUID != null && !Objects.equals(guildMasterUUID.replaceAll(" ", ""), "")) this.membersUUID.add(guildMasterUUID);
+        this.guildMasterUUID = "";
         this.setGuildMasterUUID(guildMasterUUID);
         this.guildPermissions = new HashSet<>();
     }
@@ -40,9 +42,9 @@ public class Guild extends PermissionTools {
         this.guildPermissions.add(permission);
     }
 
-    public void setPerms(Player player) {
+    public void setPerms(UUID uuid) {
         if (this.guildPermissions.isEmpty()) return;
-        for (String perm : this.guildPermissions) setPermission(perm, player);
+        for (String perm : this.guildPermissions) setPermission(perm, uuid);
     }
 
     @NotNull
@@ -75,11 +77,7 @@ public class Guild extends PermissionTools {
 
     @NotNull
     public Guild setGuildMasterUUID(@Nullable String guildMasterUUID) {
-        if (!this.guildMasterUUID.isEmpty()) {
-            Player master = getPlayer(UUID.fromString(this.guildMasterUUID));
-            assert master != null;
-            removeGuildMasterPerms(master);
-        }
+        if (!this.guildMasterUUID.isEmpty()) removeGuildMasterPerms(UUID.fromString(this.guildMasterUUID));
 
         if (guildMasterUUID == null || guildMasterUUID.isEmpty()) this.guildMasterUUID = "";
         else {
@@ -87,36 +85,34 @@ public class Guild extends PermissionTools {
                 this.guildMasterUUID = guildMasterUUID;
                 this.membersUUID.add(this.guildMasterUUID);
 
-                Player master = getPlayer(UUID.fromString(this.guildMasterUUID));
-                if (master != null) setGuildMasterPerms(master);
-                else this.guildMasterUUID = "";
+                setGuildMasterPerms(UUID.fromString(this.guildMasterUUID));
             }
         }
         return this;
     }
 
-    private void removePlayer(@NotNull Player player) {
-        if (this.membersUUID.contains(player.getUniqueId().toString())) {
-            this.membersUUID.remove(player.getUniqueId().toString());
+    private void removePlayer(@NotNull UUID uuid) {
+        if (this.membersUUID.contains(uuid.toString())) {
+            this.membersUUID.remove(uuid.toString());
 
-            if (player.getUniqueId().toString().equals(this.guildMasterUUID)) this.setGuildMasterUUID(null);
+            if (uuid.toString().equals(this.guildMasterUUID)) this.setGuildMasterUUID(null);
 
-            for (String permission : this.guildPermissions) unSetPermission(permission, player);
+            for (String permission : this.guildPermissions) unSetPermission(permission, uuid);
             new Reader().writeGuild(this);
         }
     }
 
     public void kickPlayer(@NotNull Player player) {
-        this.removePlayer(player);
+        this.removePlayer(player.getUniqueId());
+    }
+
+    public void kickPlayer(@NotNull UUID uuid) {
+        this.removePlayer(uuid);
     }
 
     @NotNull
     public String getGuildMasterName() {
-        if (!Objects.equals(this.guildMasterUUID, "")) {
-            Player player = getPlayer(UUID.fromString(this.guildMasterUUID));
-            assert player != null;
-            return player.getName();
-        }
+        if (!Objects.equals(this.guildMasterUUID, "")) return getPlayerName(this.guildMasterUUID);
         else return "&cГлава гильдии не назначен!";
     }
 
@@ -125,12 +121,9 @@ public class Guild extends PermissionTools {
         return "&6Информация о гильдии:\n&6- Название: %s&6\n&6- Айди: %s\n&6- Глава гильдии: %s\n&6- Количество участников: %s".formatted(this.displayName, this.id, this.getGuildMasterName(), this.membersUUID.size());
     }
 
-    public void addMember(Player player) {
+    public void addMember(OfflinePlayer player) {
         this.membersUUID.add(player.getUniqueId().toString());
         new Reader().writeGuild(this);
-
-        for (String permission : this.guildPermissions) setPermission(permission, player);
-
     }
 
     @NotNull

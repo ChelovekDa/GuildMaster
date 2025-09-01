@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 
-@SuppressWarnings({"ResultOfMethodCallIgnored", "SuspiciousListRemoveInLoop", "unchecked"})
+@SuppressWarnings({"ResultOfMethodCallIgnored", "SuspiciousListRemoveInLoop"})
 class EventLogger extends ToolMethods {
 
     private static final String TIMED_MESSAGES_FILE = "logs.json";

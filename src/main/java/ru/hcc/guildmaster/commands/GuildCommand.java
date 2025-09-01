@@ -220,8 +220,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         }
                     }
 
-                    if (guild != null) ((Player) sender).openInventory(new GuildRequestsMenu(guild.getSearchObject()).getMenu());
-
                     if (isOp((Player) sender)) {
                         if (strings.length >= 2) {
                             HashMap<String, Object> additionalValues = new HashMap<>();
@@ -247,6 +245,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         Search search = new Search(null, null);
                         ((Player) sender).openInventory(new GuildRequestsMenu(search).getMenu());
                     }
+                    else if (guild != null) ((Player) sender).openInventory(new GuildRequestsMenu(guild.getSearchObject()).getMenu());
                 }
                 else sender.sendMessage(errorPermission());
             }
@@ -279,10 +278,10 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         }
 
                         for (TimedMessage mes : timedMessages) {
-                            Player player = getPlayer(UUID.fromString(String.valueOf(mes.customValues.get("uuid"))));
+                            OfflinePlayer player = getPlayer(UUID.fromString(String.valueOf(mes.customValues.get("uuid"))));
                             if (player == null) continue;
 
-                            if (player.getName().equals(strings[2])) {
+                            if (Objects.requireNonNull(player.getName()).equals(strings[2])) {
                                 reader.saveTimedMessage(mes.setStatus(EventStatusKey.READ));
 
                                 if (guild.maxMembersCount <= guild.membersUUID.size()) {
@@ -292,7 +291,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
 
                                 guild.addMember(player);
                                 sender.sendMessage(setColor("&aИгрок %s успешно зачислен в гильдию %s&a!".formatted(player.getName(), guild.displayName)));
-                                if (player.isOnline()) player.sendMessage(setColor(guild.getSuccessMemberJoinMessage()));
+                                if (player.isOnline()) Objects.requireNonNull(player.getPlayer()).sendMessage(setColor(guild.getSuccessMemberJoinMessage()));
 
                                 for (TimedMessage m : mes.getSearchInstance().search())
                                     reader.saveTimedMessage(m.setStatus(EventStatusKey.READ));
@@ -402,70 +401,68 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                 for (String id : guilds.keySet()) {
                     Guild guild = guilds.get(id);
                     if (guild.id.equals(strings[1])) {
-                        if (sender instanceof Player) {
-                            if (!guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString()) || !isOp((Player) sender)) continue;
-                        }
+                        if (sender instanceof ConsoleCommandSender || isOp((Player) sender) || guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
+                            for (String uuid : guild.membersUUID) {
+                                OfflinePlayer player = getPlayer(UUID.fromString(uuid));
+                                assert player != null;
+                                if (Objects.requireNonNull(player.getName()).equals(strings[2])) {
+                                    if (sender instanceof Player) {
+                                        if (uuid.equals(((Player) sender).getUniqueId().toString())) {
+                                            sender.sendMessage(setColor("&cВы не можете выгнать себя из гильдии!"));
+                                            return false;
+                                        }
 
-                        for (String uuid : guild.membersUUID) {
-                            Player player = getPlayer(UUID.fromString(uuid));
-                            assert player != null;
-                            if (player.getName().equals(strings[2])) {
-                                if (sender instanceof Player) {
-                                    if (uuid.equals(((Player) sender).getUniqueId().toString())) {
-                                        sender.sendMessage(setColor("&cВы не можете выгнать себя из гильдии!"));
-                                        return false;
-                                    }
+                                        if (hasPerm("guildmaster.guild.kick", sender) || guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
+                                            ConfirmMenu confirmMenu = new ConfirmMenu() {
+                                                @Override
+                                                protected void onConfirm() {
+                                                    HashMap<String, Object> additionalValues = new HashMap<>();
+                                                    additionalValues.put("guild", guild.id);
+                                                    additionalValues.put("uuid", player.getUniqueId().toString());
+                                                    reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, EventNameKey.PLAYER_KICK_FROM_GUILD.getMessage(), additionalValues));
 
-                                    if (hasPerm("guildmaster.guild.kick", sender) || guild.getGuildMasterUUID().equals(((Player) sender).getUniqueId().toString())) {
-                                        ConfirmMenu confirmMenu = new ConfirmMenu() {
-                                            @Override
-                                            protected void onConfirm() {
-                                                HashMap<String, Object> additionalValues = new HashMap<>();
-                                                additionalValues.put("guild", guild.id);
-                                                additionalValues.put("uuid", player.getUniqueId().toString());
-                                                reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, EventNameKey.PLAYER_KICK_FROM_GUILD.getMessage(), additionalValues));
+                                                    guild.kickPlayer(player.getUniqueId());
 
-                                                guild.kickPlayer(player);
+                                                    if (player.isOnline()) {
+                                                        Objects.requireNonNull(player.getPlayer()).sendMessage(setColor("&cВы были исключены из гильдии!"));
+                                                    }
 
-                                                if (player.isOnline()) {
-                                                    player.sendMessage(setColor("&cВы были исключены из гильдии!"));
+                                                    sender.sendMessage(setColor("&aИгрок %s успешно исключен из гильдии %s&a!".formatted(player.getName(), guild.displayName)));
+                                                    ((Player) sender).closeInventory();
                                                 }
 
-                                                sender.sendMessage(setColor("&aИгрок %s успешно исключен из гильдии %s&a!".formatted(player.getName(), guild.displayName)));
-                                                ((Player) sender).closeInventory();
-                                            }
+                                                @Override
+                                                protected @NotNull String[] getConfirmLore() {
+                                                    return new String[] {"", "&aВы подтверждаете, что хотите исключить игрока %s из гильдии %s&a?".formatted(player.getName(), guild.displayName), ""};
+                                                }
 
-                                            @Override
-                                            protected @NotNull String[] getConfirmLore() {
-                                                return new String[] {"", "&aВы подтверждаете, что хотите исключить игрока %s из гильдии %s&a?".formatted(player.getName(), guild.displayName), ""};
-                                            }
+                                                @Override
+                                                protected void onCancel() {
+                                                    sender.sendMessage(setColor("&aДействие отменено."));
+                                                    ((Player) sender).closeInventory();
+                                                }
+                                            };
+                                            ((Player) sender).openInventory(confirmMenu.getMenu());
+                                            return true;
+                                        }
+                                    }
+                                    else {
+                                        HashMap<String, Object> additionalValues = new HashMap<>();
+                                        additionalValues.put("guild", guild.id);
+                                        additionalValues.put("uuid", player.getUniqueId().toString());
+                                        reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, EventNameKey.PLAYER_KICK_FROM_GUILD.getMessage(), additionalValues));
 
-                                            @Override
-                                            protected void onCancel() {
-                                                sender.sendMessage(setColor("&aДействие отменено."));
-                                                ((Player) sender).closeInventory();
-                                            }
-                                        };
-                                        ((Player) sender).openInventory(confirmMenu.getMenu());
+                                        guild.kickPlayer(player.getUniqueId());
+
+                                        if (player.isOnline()) Objects.requireNonNull(player.getPlayer()).sendMessage(setColor("&cВы были исключены из гильдии!"));
+                                        sender.sendMessage(setColor("&aИгрок %s успешно исключен из гильдии %s&a!".formatted(player.getName(), guild.displayName)));
                                         return true;
                                     }
                                 }
-                                else if (sender instanceof ConsoleCommandSender) {
-                                    HashMap<String, Object> additionalValues = new HashMap<>();
-                                    additionalValues.put("guild", guild.id);
-                                    additionalValues.put("uuid", player.getUniqueId().toString());
-                                    reader.saveTimedMessage(new TimedMessage(EventNameKey.PLAYER_KICK_FROM_GUILD, EventStatusKey.WAITING, EventNameKey.PLAYER_KICK_FROM_GUILD.getMessage(), additionalValues));
-
-                                    guild.kickPlayer(player);
-
-                                    if (player.isOnline()) player.sendMessage(setColor("&cВы были исключены из гильдии!"));
-                                    sender.sendMessage(setColor("&aИгрок %s успешно исключен из гильдии %s&a!".formatted(player.getName(), guild.displayName)));
-                                    return true;
-                                }
                             }
+                            sender.sendMessage(setColor("&cВ этой гильдии не существует такого игрока!"));
+                            return false;
                         }
-                        sender.sendMessage(setColor("&cВ этой гильдии не существует такого игрока!"));
-                        return false;
                     }
                 }
                 sender.sendMessage(setColor("&cТакой гильдии не существует!"));
@@ -480,8 +477,14 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                         if (strings.length >= 2 && player.getName().equals(strings[1])) {
 
                             if (isOp((Player) sender)) {
-                                track(player, Objects.requireNonNull(((Player) sender).getPlayer()));
-                                return true;
+                                if (((Player) sender).getUniqueId().equals(player.getUniqueId())) {
+                                    sender.sendMessage(setColor("&cСледить за собой надо не так! Иди помойся!"));
+                                    return false;
+                                }
+                                else {
+                                    track(player, Objects.requireNonNull(((Player) sender).getPlayer()));
+                                    return true;
+                                }
                             }
 
                             HashMap<String, Guild> guilds = reader.getGuilds();
@@ -611,7 +614,6 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     }
                 }
                 sender.sendMessage(setColor("&cГильдия не найдена!"));
-                return false;
             }
             else {
                 for (String id : guilds.keySet()) {
@@ -622,8 +624,8 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                     }
                 }
                 sender.sendMessage(setColor("&cВы не состоите в гильдии!"));
-                return false;
             }
+            return false;
         }
         else sender.sendMessage(unknownCommand());
 
@@ -662,6 +664,19 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
         }
         else if (args.length == 3 && args[0].equals("create") && sender instanceof Player) {
             if (hasPerm("guildmaster.guild.create.wgm", sender)) completions.add("-gm");
+        }
+        else if (args.length == 3 && args[0].equals("kick") && hasPerm("guildmaster.guild.kick", sender)) {
+            Guild guild = reader.getGuilds().get(args[1]);
+            if (guild != null) {
+                boolean check = sender instanceof ConsoleCommandSender;
+                if (check) for (String uuid : guild.membersUUID) completions.add(getPlayerName(uuid));
+                else {
+                    for (String uuid : guild.membersUUID) {
+                        if (!((Player) sender).getUniqueId().toString().equals(uuid))
+                            completions.add(getPlayerName(uuid));
+                    }
+                }
+            }
         }
         else for (Player player : Bukkit.getOnlinePlayers()) completions.add(player.getName());
         return completions;

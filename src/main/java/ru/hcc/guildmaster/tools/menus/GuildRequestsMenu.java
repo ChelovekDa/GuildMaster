@@ -162,25 +162,18 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         ItemStack itemStack = ItemStack.of(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta meta = itemStack.getItemMeta();
 
-        Player player;
-        try {
-            player = Bukkit.getPlayer(UUID.fromString(String.valueOf(message.customValues.get("uuid"))));
-        }
-        catch (IllegalArgumentException exception) {
-            player = null;
-        }
+        String playerNickname = getPlayerName(UUID.fromString(String.valueOf(message.customValues.get("uuid"))).toString());
 
-        if (player == null && !message.eventNameKey.equals(EventNameKey.ATTEMPT_TO_RELOAD)) return null;
+        if (playerNickname.isEmpty() && !message.eventNameKey.equals(EventNameKey.ATTEMPT_TO_RELOAD)) return null;
 
         meta.setDisplayName(setColor("&e%s".formatted(message.date)));
 
         if (message.eventNameKey.equals(EventNameKey.PLAYER_CALL_REQUEST_TO_JOIN_GUILD)) {
-            assert player != null;
             ArrayList<String> arrayList = convertToMenu(message.message);
             arrayList.add(0, "");
             arrayList.add(1, "&fЗаявка на вступление в гильдию:");
             arrayList.add(2, "&fАйди гильдии: %s%s".formatted(getRequestsColor(), message.customValues.get("guild")));
-            arrayList.add(3, "&fИгрок: %s%s".formatted(getRequestsColor(), player.getName()));
+            arrayList.add(3, "&fИгрок: %s%s".formatted(getRequestsColor(), playerNickname));
             arrayList.add(4,"&fСообщение игрока:");
             arrayList.add(5, "");
 
@@ -188,28 +181,22 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         }
         else if (message.eventNameKey.equals(EventNameKey.ATTEMPT_TO_RELOAD)) {
             var res = String.valueOf(message.customValues.get("uuid"));
-            String name;
-            if (res != null && res.equals("ConsoleSender")) name = "&c&lКонсоль&f";
-            else {
-                assert player != null;
-                name = player.getName();
-            }
+            if (res != null && res.equals("ConsoleSender")) playerNickname = "&c&lКонсоль&f";
 
             ArrayList<String> arrayList = convertToMenu(message.message);
             arrayList.add(0, "");
             arrayList.add(1, "&fДействие: %s%s".formatted(getRequestsColor(), message.eventNameKey.getMessage()));
-            arrayList.add(2, "&fАктивировал: %s%s".formatted(getRequestsColor(), name));
+            arrayList.add(2, "&fАктивировал: %s%s".formatted(getRequestsColor(), playerNickname));
             arrayList.add(3, "");
 
             meta.setLore(List.of(setColors(ArrayToList(arrayList))));
         }
         else {
-            assert player != null;
             ArrayList<String> arrayList = convertToMenu(message.message);
             arrayList.add(0, "");
             arrayList.add(1, "&fДействие: %s%s".formatted(getRequestsColor(), message.eventNameKey.getMessage()));
             arrayList.add(2, "&fАйди гильдии: %s%s".formatted(getRequestsColor(), message.customValues.get("guild")));
-            arrayList.add(3, "&fАктивировал: %s%s".formatted(getRequestsColor(), player.getName()));
+            arrayList.add(3, "&fАктивировал: %s%s".formatted(getRequestsColor(), playerNickname));
             arrayList.add(4, "");
 
             meta.setLore(List.of(setColors(ArrayToList(arrayList))));
@@ -250,25 +237,18 @@ public class GuildRequestsMenu extends ToolMethods implements Menu {
         assert lore != null;
 
         String nickname;
-        Player player;
 
         if (lore.size() == 5) {
             nickname = removeHistory(lore.get(2).split(" ")[1]).replace(getRequestsColor(), "");
             if (nickname.contains("&")) nickname = "ConsoleSender";
-            else {
-                player = Bukkit.getPlayer(nickname);
-                assert player != null;
-                nickname = player.getUniqueId().toString();
-            }
+            else nickname = getPlayerUUID(nickname);
             map.put("uuid", nickname);
         }
         else {
             nickname = removeHistory(lore.get(3).split(" ")[1]).replace(getRequestsColor(), "");
-            player = Bukkit.getPlayer(nickname);
-            assert player != null;
 
             map.put("guild", removeHistory(lore.get(2).split(" ")[2]).replace(getRequestsColor(), ""));
-            map.put("uuid", player.getUniqueId().toString());
+            map.put("uuid", getPlayerUUID(nickname));
         }
 
         String line = removeHistory(lore.get(1));

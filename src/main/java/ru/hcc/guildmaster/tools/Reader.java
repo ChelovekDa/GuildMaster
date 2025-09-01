@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -53,7 +52,7 @@ public class Reader extends PlayerTrackingLogger {
     @NotNull
     public ArrayList<String> getGuildNames() {
         var guilds = getGuilds();
-        if (guilds == null) return new ArrayList<>();
+        if (guilds.isEmpty()) return new ArrayList<>();
 
         ArrayList<String> result = new ArrayList<>();
         for (String guildID : guilds.keySet()) result.add(guilds.get(guildID).id);
@@ -66,7 +65,7 @@ public class Reader extends PlayerTrackingLogger {
 
         HashMap<String, Guild> guildsHashMap = getGuilds();
 
-        if (guildsHashMap != null) {
+        if (!guildsHashMap.isEmpty()) {
             for (String guildId : guildsHashMap.keySet()) {
                 if (guildId.equals(guild.id)) guildsHashMap.remove(guildId);
             }
@@ -98,8 +97,9 @@ public class Reader extends PlayerTrackingLogger {
 
         HashMap<String, Guild> guildsHashMap = getGuilds();
 
-        if (guildsHashMap != null) {
-            for (String guildId : guildsHashMap.keySet()) {
+        if (!guildsHashMap.isEmpty()) {
+            HashMap<String, Guild> copied = (HashMap<String, Guild>) guildsHashMap.clone();
+            for (String guildId : copied.keySet()) {
                 if (guildId.equals(guild.id)) {
                     guildsHashMap.remove(guildId);
                     guildsHashMap.put(guildId, guild);

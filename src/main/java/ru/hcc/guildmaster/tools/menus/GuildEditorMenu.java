@@ -2,6 +2,7 @@ package ru.hcc.guildmaster.tools.menus;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -166,9 +167,9 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
                         reader.saveTimedMessage(timedMessage.setStatus(EventStatusKey.WAITING));
 
                         if (!masterUUID.isEmpty()) {
-                            Player master = getPlayer(UUID.fromString(masterUUID));
+                            OfflinePlayer master = getPlayer(UUID.fromString(masterUUID));
                             if (master != null && master.isOnline()) {
-                                master.sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
+                                Objects.requireNonNull(master.getPlayer()).sendMessage(setColor("&cВы были понижены до рядового участника гильдии!"));
                             }
                         }
 
@@ -240,8 +241,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             return;
         }
 
-        var guilds = reader.getGuilds();
-        assert guilds != null;
+        HashMap<String, Guild> guilds = reader.getGuilds();
         guild = null;
         for (String guildId : guilds.keySet()) {
             if (guildId.equals(id)) guild = guilds.get(guildId);
@@ -408,7 +408,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemStack itemStack = new ItemStack(Material.REDSTONE);
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.setDisplayName(setColor("&6&lУстановить количество учасников"));
+        meta.setDisplayName(setColor("&6&lУстановить количество участников"));
         meta.setLore(List.of(setColors(new String[] {"", "&fПозволяет изменить максимально возможное количество участников в гильдии ", "&cв диапазоне от 1 до 127 человек.", "&fТекущее максимальное количество участников: &b%s".formatted(String.valueOf(guild.maxMembersCount)), ""})));
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.KNOCKBACK, 2, false);

@@ -3,6 +3,7 @@ package ru.hcc.guildmaster.tools;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.hcc.guildmaster.GuildMaster;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -91,27 +93,32 @@ public class ToolMethods {
         ArrayList<String> result = new ArrayList<>();
 
         if (mes.length() > MAX_LINE_LENGTH) {
-            String[] split = mes.split(" ");
-            int length = 0;
+            ArrayList<String> words = new ArrayList<>(List.of(mes.split(" ")));
+            System.out.println("words:\t" + words);
 
-            StringBuilder builder = new StringBuilder();
+            while (!words.isEmpty()) {
+                StringBuilder builder = new StringBuilder();
 
-            for (int i = 0; i < split.length; i++) {
-                if (length + split[i].length() <= MAX_LINE_LENGTH) {
-                    if (i > 0) builder.append(" ");
-                    builder.append(split[i]);
+                for (int i = 0; i < words.size(); i++) {
+                    String word = words.get(i);
+                    String res = "%s %s".formatted(builder.toString(), word);
 
-                    length += split[i].length();
-                }
-                else {
-                    result.add(builder.toString());
-                    builder = new StringBuilder();
-                    length = 0;
+                    if (res.length() >= MAX_LINE_LENGTH) {
+                        result.add(builder.toString());
+                        break;
+                    }
+                    else {
+                        builder.append(" %s".formatted(word));
+                        words.remove(i);
+                        i = 0;
+                    }
                 }
             }
+
         }
         else result.add(mes);
 
+        System.out.println("Result:\t" + result);
         return result;
     }
 
@@ -133,13 +140,31 @@ public class ToolMethods {
     /**
      * This method needs to get Player object from his UUID
      * @param uuid player's uuid
-     * @return Player object or null
+     * @return Player object or null (if player is not online)
      */
     @Nullable
-    public Player getPlayer(UUID uuid) {
-        var players = Bukkit.getOnlinePlayers();
-        if (!players.isEmpty()) for (Player pl : players) if (pl.getUniqueId().equals(uuid)) return pl;
-        return Bukkit.getOfflinePlayer(uuid).getPlayer();
+    public OfflinePlayer getPlayer(UUID uuid) {
+        return Bukkit.getOfflinePlayer(uuid);
+    }
+
+    /**
+     * This method needs to get player name if player is not online.
+     * @param uuid His uuid in string format
+     * @return His in-game name
+     */
+    @NotNull
+    public static String getPlayerName(String uuid) {
+        return Objects.requireNonNull(Bukkit.getOfflinePlayer(UUID.fromString(uuid)).getName());
+    }
+
+    /**
+     * This method needs to get player uuid if player is not online.
+     * @param name His in-game name
+     * @return His uuid
+     */
+    @NotNull
+    public static String getPlayerUUID(String name) {
+        return Objects.requireNonNull(Bukkit.getOfflinePlayer(name).getUniqueId().toString());
     }
 
     @NotNull
