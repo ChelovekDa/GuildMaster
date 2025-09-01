@@ -656,6 +656,7 @@ public class GuildCommand extends PermissionTools implements CommandExecutor, Ta
                                 break;
                             }
                         }
+                        completions.addAll(reader.getGuildNames());
                     }
                     else completions.addAll(reader.getGuildNames());
                 }

@@ -2,6 +2,7 @@ package ru.hcc.guildmaster.tools;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.hcc.guildmaster.tools.timed.EventNameKey;
@@ -36,6 +37,11 @@ public class Guild extends PermissionTools {
         if (!this.membersUUID.contains(uuid)) return false;
         for (String memberUUID : this.membersUUID) if (memberUUID.equals(uuid)) return true;
         return false;
+    }
+
+    @NotNull
+    public ArrayList<String> getPermissions() {
+        return new ArrayList<>(this.guildPermissions);
     }
 
     public void addPermission(String permission) {

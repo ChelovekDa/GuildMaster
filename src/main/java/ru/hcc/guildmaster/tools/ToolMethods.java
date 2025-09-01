@@ -20,7 +20,7 @@ import java.util.logging.Level;
 @SuppressWarnings("deprecation")
 public class ToolMethods {
 
-    private static final int MAX_LINE_LENGTH = 125;
+    private static final int MAX_LINE_LENGTH = 90;
 
     public static String setColor(String str) { return ChatColor.translateAlternateColorCodes('&', str); }
 
@@ -89,36 +89,58 @@ public class ToolMethods {
      * @return ArrayList with converted strings
      */
     @NotNull
-    public ArrayList<String> convertToMenu(@NotNull String mes) {
+    public static ArrayList<String> convertToMenu(@NotNull String mes) {
         ArrayList<String> result = new ArrayList<>();
 
-        if (mes.length() > MAX_LINE_LENGTH) {
-            ArrayList<String> words = new ArrayList<>(List.of(mes.split(" ")));
-            System.out.println("words:\t" + words);
+        if (mes.trim().isEmpty()) {
+            result.add("");
+            return result;
+        }
 
-            while (!words.isEmpty()) {
-                StringBuilder builder = new StringBuilder();
+        if (mes.length() <= MAX_LINE_LENGTH) {
+            result.add(mes);
+            return result;
+        }
 
-                for (int i = 0; i < words.size(); i++) {
-                    String word = words.get(i);
-                    String res = "%s %s".formatted(builder.toString(), word);
+        String[] words = mes.split(" ");
+        StringBuilder currentLine = new StringBuilder();
 
-                    if (res.length() >= MAX_LINE_LENGTH) {
-                        result.add(builder.toString());
-                        break;
-                    }
-                    else {
-                        builder.append(" %s".formatted(word));
-                        words.remove(i);
-                        i = 0;
-                    }
+        for (String word : words) {
+            if (word.length() > MAX_LINE_LENGTH) {
+                if (!currentLine.isEmpty()) {
+                    result.add(currentLine.toString().trim());
+                    currentLine = new StringBuilder();
                 }
+
+                int start = 0;
+                while (start < word.length()) {
+                    int end = Math.min(start + MAX_LINE_LENGTH, word.length());
+                    String part = word.substring(start, end);
+                    result.add(part);
+                    start = end;
+                }
+                continue;
             }
 
+            if (currentLine.length() + word.length() + 1 <= MAX_LINE_LENGTH) {
+                if (!currentLine.isEmpty()) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
+            } else {
+                if (!currentLine.isEmpty()) {
+                    result.add(currentLine.toString());
+                    currentLine = new StringBuilder(word);
+                } else {
+                    currentLine.append(word);
+                }
+            }
         }
-        else result.add(mes);
 
-        System.out.println("Result:\t" + result);
+        if (!currentLine.isEmpty()) {
+            result.add(currentLine.toString());
+        }
+
         return result;
     }
 

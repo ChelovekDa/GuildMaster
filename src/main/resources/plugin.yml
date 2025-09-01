@@ -1,11 +1,11 @@
 name: GuildMaster
-version: '0.2.1-beta'
+version: 'release-1.0'
 main: ru.hcc.guildmaster.GuildMaster
 api-version: '1.21'
 prefix: GuildMaster
 author: English (aka Horoshiy)
 description: Plugin for guilds
-softdepend: [ LuckPerms, ProtocolLib ]
+softdepend: [ LuckPerms ]
 website:
   'Discord: english_horoshiy'
 commands:

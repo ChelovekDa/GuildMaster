@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'ru.hcc'
-version = '0.2.1-beta'
+version = 'release-1.0'
 
 repositories {
     mavenCentral()

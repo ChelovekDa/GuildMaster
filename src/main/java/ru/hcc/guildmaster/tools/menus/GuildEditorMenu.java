@@ -35,6 +35,39 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
     private Guild guild;
 
     @EventHandler
+    public void onAdminPermissionAdding(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        String mes = event.getMessage().replaceAll(" ", "");
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("uuid", player.getUniqueId().toString());
+        Search search = new Search(EventNameKey.GUILD_ADD_PERMISSION, EventStatusKey.NOTHING, map);
+        ArrayList<TimedMessage> messages = search.search();
+        if (messages.isEmpty()) return;
+        else event.setCancelled(true);
+
+        TimedMessage timedMessage = messages.getFirst();
+
+        String guildId = String.valueOf(timedMessage.customValues.get("guild"));
+        if (timedMessage.customValues.get("guild") == null) return;
+        Guild guild = Objects.requireNonNull(reader.getGuilds()).get(guildId);
+
+        for (String guildPermission : guild.getPermissions()) {
+            if (guildPermission.equals(mes)) {
+                for (TimedMessage message : messages) reader.saveTimedMessage(message.setStatus(EventStatusKey.READ));
+                player.sendMessage(setColor("&cУстановить это разрешение невозможно, поскольку оно уже установленно для этой гильдии."));
+                return;
+            }
+        }
+
+        guild.addPermission(mes);
+        reader.writeGuild(guild);
+        for (TimedMessage message : messages) reader.saveTimedMessage(message.setStatus(EventStatusKey.WAITING));
+        player.sendMessage(setColor("&aРазрешение &6&o%s&a успешно установленно для гильдии %s&a!".formatted(mes, guild.displayName)));
+        player.sendMessage(setColor("&aДля успешной выдачи разрешения, всем участникам этой гильдии необходимо перезайти на сервер."));
+    }
+
+    @EventHandler
     public void onMemberCountChange(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         String mes = event.getMessage().replaceAll(" ", "");
@@ -272,7 +305,7 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             HashMap<String, Object> map = new HashMap<>();
             map.put("guild", guild.id);
             map.put("uuid", player.getUniqueId().toString());
-            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_NAME, EventStatusKey.NOTHING, "Guild change display name", map);
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_NAME, EventStatusKey.NOTHING, EventNameKey.GUILD_CHANGE_NAME.getMessage(), map);
 
             reader.saveTimedMessage(message);
             player.closeInventory();
@@ -282,17 +315,17 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             HashMap<String, Object> map = new HashMap<>();
             map.put("guild", guild.id);
             map.put("uuid", player.getUniqueId().toString());
-            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_COUNT_MEMBERS, EventStatusKey.NOTHING, "Guild change count members", map);
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_CHANGE_COUNT_MEMBERS, EventStatusKey.NOTHING, EventNameKey.GUILD_CHANGE_COUNT_MEMBERS.getMessage(), map);
 
             reader.saveTimedMessage(message);
             player.closeInventory();
-            player.sendMessage(setColor("&aВведите в чат новое максимальное количество игроков в гильдии"));
+            player.sendMessage(setColor("&aВведите в чат новое максимальное количество игроков в гильдии."));
         }
         else if (stack.equals(getDeleteItem())) {
             HashMap<String, Object> map = new HashMap<>();
             map.put("guild", guild.id);
             map.put("uuid", player.getUniqueId().toString());
-            TimedMessage message = new TimedMessage(EventNameKey.GUILD_DELETE, EventStatusKey.NOTHING, "Guild deleting", map);
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_DELETE, EventStatusKey.NOTHING, EventNameKey.GUILD_DELETE.getMessage(), map);
 
             reader.saveTimedMessage(message);
 
@@ -321,6 +354,23 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             player.closeInventory();
             player.openInventory(menu.getMenu());
         }
+        else if (stack.equals(getPermissionAddItem())) {
+
+            if (!isOp(player)) {
+                player.sendMessage(setColor("&cВам не доступна эта опция!"));
+                player.closeInventory();
+                return;
+            }
+
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("guild", guild.id);
+            map.put("uuid", player.getUniqueId().toString());
+            TimedMessage message = new TimedMessage(EventNameKey.GUILD_ADD_PERMISSION, EventStatusKey.NOTHING, EventNameKey.GUILD_ADD_PERMISSION.getMessage(), map);
+
+            reader.saveTimedMessage(message);
+            player.closeInventory();
+            player.sendMessage(setColor("&aВведите в чат новое разрешение для гильдии."));
+        }
     }
 
     private static final byte[] cords = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 46, 47, 48, 49, 50, 51, 52, 53};
@@ -342,6 +392,35 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
         ItemMeta meta = itemStack.getItemMeta();
 
         meta.setDisplayName(setColor("&f&lID: %s".formatted(guild.id)));
+
+        itemStack.setItemMeta(meta);
+        return itemStack;
+    }
+
+    @NotNull
+    private ItemStack getPermissionAddItem() {
+        ItemStack itemStack = new ItemStack(Material.WOODEN_SWORD);
+        ItemMeta meta = itemStack.getItemMeta();
+
+        meta.setDisplayName(setColor("&2&lДобавить разрешение"));
+
+        ArrayList<String> lore = new ArrayList<>();
+        lore.addFirst("");
+        lore.add("&fПозволяет добавить разрешение (пермишен) для всех участников гильдии.");
+        lore.add("&cМожно использовать только администратору.&f");
+        lore.add("&fРазрешения этой гильдии:");
+
+        ArrayList<String> perms = guild.getPermissions();
+        if (perms.isEmpty()) {
+            lore.add("");
+            lore.add(" &cУ этой гильдии нет уникальных разрешений.");
+        }
+        else for (String perm : perms) lore.add(" &6- %s".formatted(perm));
+        lore.addLast("");
+
+        meta.setLore(List.of(setColors(ArrayToList(lore))));
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ENCHANTS);
+        meta.addEnchant(Enchantment.KNOCKBACK, 2, false);
 
         itemStack.setItemMeta(meta);
         return itemStack;
@@ -459,6 +538,8 @@ public class GuildEditorMenu extends ToolMethods implements Menu {
             inventory.setItem(22, getDeleteItem());
             inventory.setItem(23, getSetMembersCountItem());
             inventory.setItem(24, getSetDisplayNameItem());
+
+            inventory.setItem(31, getPermissionAddItem());
 
             inventory.setItem(43, getColorDescriptionItem());
             inventory.setItem(45, getMenuGuildIDItem());
